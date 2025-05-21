@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileFlow.Api", "FileFlow.Api\FileFlow.Api.csproj", "{0C0EF7D6-E011-4939-A628-9DEEED091844}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileFlow.Contracts", "FileFlow.Contracts\FileFlow.Contracts.csproj", "{8E470A89-01EC-4CB9-95DD-2D6FD9A7AD3B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{0C0EF7D6-E011-4939-A628-9DEEED091844}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C0EF7D6-E011-4939-A628-9DEEED091844}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C0EF7D6-E011-4939-A628-9DEEED091844}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E470A89-01EC-4CB9-95DD-2D6FD9A7AD3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E470A89-01EC-4CB9-95DD-2D6FD9A7AD3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E470A89-01EC-4CB9-95DD-2D6FD9A7AD3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E470A89-01EC-4CB9-95DD-2D6FD9A7AD3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
