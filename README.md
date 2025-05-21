@@ -49,7 +49,7 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 ### 2. File/Folder Model
 ```json
 {
-  "id": "number",
+  "id": "string",
   "name": "string", // Includes extension (for files)
   "type": "string", // "file" or "folder"
   "starred": "boolean",
