@@ -12,4 +12,8 @@
         <PackageReference Include="Scrutor" Version="6.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\FileFlow.Contracts\FileFlow.Contracts.csproj" />
+    </ItemGroup>
+
 </Project>
