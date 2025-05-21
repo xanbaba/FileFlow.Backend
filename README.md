@@ -35,13 +35,13 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 {
   "id": "string",
   "userId": "string",
-  "maxSpace": "number", // In bytes
-  "availableSpace": "number", // In bytes
+  "maxSpace": "number", // In MB
+  "usedSpace": "number", // In MB
   "storageBreakdown": {
-    "documents": "number", // In bytes
-    "images": "number", // In bytes
-    "videos": "number", // In bytes
-    "other": "number" // In bytes
+    "documents": "number", // In MB
+    "images": "number", // In MB
+    "videos": "number", // In MB
+    "other": "number" // In MB
   }
 }
 ```
@@ -55,7 +55,7 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
   "starred": "boolean",
   "parentId": "number", // ID of parent folder, null if in root
   "path": "string", // Full path to the item (includes name)
-  "size": "number", // Size in bytes (for files)
+  "size": "number", // Size in MB (for files)
   "fileType": "string", // MIME type (for files)
   "inTrash": "boolean"
 }
