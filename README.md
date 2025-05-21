@@ -6,7 +6,6 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 
 ### 1. User Management
 - **User Authentication**: Support Auth0 integration for user authentication
-- **User Profile Management**: Store and retrieve user profile information
 - **Storage Quota Management**: Track and manage user storage limits and usage
 
 ### 2. File Management
@@ -31,21 +30,18 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 
 ## Data Models
 
-### 1. User Model
+### 1. UserStorage Model
 ```json
 {
   "id": "string",
-  "email": "string",
-  "name": "string",
-  "nickname": "string",
-  "picture": "string",
-  "storageUsed": "number",
-  "storageTotal": "number",
+  "userId": "string",
+  "maxSpace": "number", // In bytes
+  "availableSpace": "number", // In bytes
   "storageBreakdown": {
-    "documents": "number",
-    "images": "number",
-    "videos": "number",
-    "other": "number"
+    "documents": "number", // In bytes
+    "images": "number", // In bytes
+    "videos": "number", // In bytes
+    "other": "number" // In bytes
   }
 }
 ```
@@ -54,17 +50,14 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 ```json
 {
   "id": "number",
-  "name": "string",
+  "name": "string", // Includes extension (for files)
   "type": "string", // "file" or "folder"
-  "lastModified": "string", // ISO date format
-  "color": "string", // For UI display
   "starred": "boolean",
   "parentId": "number", // ID of parent folder, null if in root
-  "path": "string", // Full path to the item
+  "path": "string", // Full path to the item (includes name)
   "size": "number", // Size in bytes (for files)
   "fileType": "string", // MIME type (for files)
-  "inTrash": "boolean",
-  "deletedAt": "string" // ISO date format, null if not in trash
+  "inTrash": "boolean"
 }
 ```
 
@@ -75,9 +68,7 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 - Implement necessary endpoints for user registration and profile management
 
 ### User Endpoints
-- `GET /api/users/profile`: Get current user profile
-- `PUT /api/users/profile`: Update user profile
-- `GET /api/users/storage`: Get storage usage statistics
+- `GET /api/users/storage`: Get user storage
 
 ### File Endpoints
 - `POST /api/files`: Upload new file(s)
