@@ -1,9 +1,9 @@
-using FileFlow.Api.Database.Entities;
+using FileFlow.Application.Database.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace FileFlow.Api.Database;
+namespace FileFlow.Application.Database;
 
-public class AppDbContext : DbContext
+internal class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)

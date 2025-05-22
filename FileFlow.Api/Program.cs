@@ -1,8 +1,7 @@
 using System.Security.Claims;
 using FileFlow.Api;
-using FileFlow.Api.Database;
+using FileFlow.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,11 +42,9 @@ builder.Services.AddCors(x =>
     })
 );
 
-builder.Services.AddDbContext<AppDbContext>(optionsBuilder =>
-{
-    optionsBuilder.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
-});
+builder.AddApplication();
 
+// Build the application.
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

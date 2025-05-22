@@ -1,4 +1,4 @@
-namespace FileFlow.Api.Database.Entities;
+namespace FileFlow.Application.Database.Entities;
 
 public class UserStorage
 {

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace FileFlow.Api.Database.Entities;
+namespace FileFlow.Application.Database.Entities;
 
-public class UserStorageEntityConfiguration : IEntityTypeConfiguration<UserStorage>
+internal class UserStorageEntityConfiguration : IEntityTypeConfiguration<UserStorage>
 {
     public void Configure(EntityTypeBuilder<UserStorage> builder)
     {
