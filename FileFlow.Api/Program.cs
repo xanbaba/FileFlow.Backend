@@ -27,6 +27,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(x =>
+    x.AddDefaultPolicy(policyBuilder =>
+    {
+        policyBuilder
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://file-flow-frontend-xanbabas-projects.vercel.app",
+                "https://file-flow-frontend-git-master-xanbabas-projects.vercel.app",
+                "https://file-flow-frontend-git-dev-xanbabas-projects.vercel.app"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    })
+);
+
 builder.Services.AddDbContext<AppDbContext>(optionsBuilder =>
 {
     optionsBuilder.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
@@ -41,6 +57,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
