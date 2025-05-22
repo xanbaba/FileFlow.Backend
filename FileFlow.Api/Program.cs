@@ -44,7 +44,7 @@ builder.Services.AddCors(x =>
     })
 );
 
-builder.AddApplication(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+builder.AddApplication(x => x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"),
     b => b.MigrationsAssembly(typeof(AssemblyMarker).Assembly))
 );
 
