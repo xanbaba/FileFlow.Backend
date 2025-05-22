@@ -2,7 +2,7 @@ using FileFlow.Application.Database.Entities;
 
 namespace FileFlow.Application.Services.Abstractions;
 
-public record FileUpload(string UserId, string FileName, string? TargetFolder, Stream Stream);
+public record FileUpload(string UserId, string FileName, string? TargetFolderPath, Stream Stream);
 
 public interface IFileService
 {

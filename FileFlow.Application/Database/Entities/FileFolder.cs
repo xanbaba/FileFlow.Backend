@@ -6,7 +6,7 @@ public enum FileFolderType
     Folder
 }
 
-public enum FileType
+public enum FileCategory
 {
     Document,
     Image,
@@ -62,7 +62,7 @@ public class FileFolder
     /// <summary>
     /// Gets or sets the type of the file (document, image, video, or other). Null for folders.
     /// </summary>
-    public FileType? FileType { get; set; } // For files
+    public FileCategory? FileCategory { get; set; } // For files
 
     /// <summary>
     /// Gets or sets a value indicating whether the file or folder is currently in the trash.
