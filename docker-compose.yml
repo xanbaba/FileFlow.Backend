@@ -9,6 +9,25 @@ services:
     volumes:
       - mssql-data:/var/opt/mssql
     restart: unless-stopped
+  
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite-blob
+    command: >
+      azurite-blob
+      --blobHost 0.0.0.0
+      --blobPort 10000
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite_blob_data:/data
+    networks:
+      - azurite-net
 
 volumes:
   mssql-data:
+  azurite_blob_data:
+    
+networks:
+  azurite-net:
+    driver: bridge
