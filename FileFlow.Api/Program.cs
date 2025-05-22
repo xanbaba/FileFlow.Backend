@@ -53,6 +53,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseApplication();
+
 app.UseHttpsRedirection();
 
 app.UseCors();
