@@ -4,7 +4,7 @@ namespace FileFlow.Application.Services.Abstractions;
 
 public interface IFolderService
 {
-    public Task<FileFolder> CreateAsync(string userId, string folderName, string targetFolder,
+    public Task<FileFolder> CreateAsync(string userId, string folderName, string? targetFolder,
         CancellationToken cancellationToken = default);
 
     public Task<FileFolder> GetMetadataAsync(string userId, Guid folderId,
