@@ -3,7 +3,6 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -18,6 +17,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<IFileService, FileService>();
         builder.Services.AddScoped<IFolderService, FolderService>();
+        builder.Services.AddScoped<IItemService, ItemService>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 
