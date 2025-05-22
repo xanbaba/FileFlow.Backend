@@ -23,7 +23,6 @@ internal class FileService : IFileService
     {
         try
         {
-            await _fileStorage.StartTransactionAsync();
             List<FileFolder> files = [];
             foreach (var uploadRequest in uploadRequests)
             {
@@ -60,7 +59,7 @@ internal class FileService : IFileService
             }
 
             await _dbContext.SaveChangesAsync(cancellationToken);
-            await _fileStorage.CommitTransactionAsync();
+            await _fileStorage.CommitAsync();
             return files;
         }
         catch (Exception)
