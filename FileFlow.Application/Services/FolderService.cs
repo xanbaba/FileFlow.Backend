@@ -21,9 +21,12 @@ internal class FolderService : IFolderService
         if (targetFolder is not null)
         {
             var parent = _dbContext.FileFolders.FirstOrDefault(x =>
-                x.UserId == userId && x.Path == targetFolder);
-            if (parent is null)
-                throw new FolderNotFoundException(userId, targetFolder);
+                x.UserId == userId &&
+                x.Path == targetFolder &&
+                x.Type == FileFolderType.Folder &&
+                !x.IsInTrash
+            );
+            if (parent is null) throw new FolderNotFoundException(userId, targetFolder);
             parentId = parent.Id;
         }
 
@@ -49,7 +52,11 @@ internal class FolderService : IFolderService
     public Task<FileFolder> GetMetadataAsync(string userId, Guid folderId,
         CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == folderId);
+        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+            x.UserId == userId &&
+            x.Id == folderId &&
+            x.Type == FileFolderType.Folder
+        );
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
         return Task.FromResult(folder);
     }
@@ -57,7 +64,12 @@ internal class FolderService : IFolderService
     public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid folderId,
         CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == folderId);
+        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+            x.UserId == userId &&
+            x.Id == folderId &&
+            x.Type == FileFolderType.Folder
+        );
+
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
 
         var children = _dbContext.FileFolders.Where(x => x.UserId == userId && x.ParentId == folderId).ToList();
@@ -67,7 +79,12 @@ internal class FolderService : IFolderService
     public async Task RenameAsync(string userId, Guid folderId, string newFolderName,
         CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == folderId);
+        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+            x.UserId == userId &&
+            x.Id == folderId &&
+            !x.IsInTrash &&
+            x.Type == FileFolderType.Folder
+        );
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
 
         string oldPath = folder.Path;
@@ -79,7 +96,7 @@ internal class FolderService : IFolderService
         folder.Path = string.Join('/', folder.Path.Split('/').SkipLast(1).Append(newFolderName));
 
         // Update paths of all descendant files and folders
-        var descendants = _dbContext.FileFolders.Where(x => 
+        var descendants = _dbContext.FileFolders.Where(x =>
             x.UserId == userId && x.Path.StartsWith(oldPath + "/")).ToList();
 
         foreach (var descendant in descendants)
@@ -92,57 +109,70 @@ internal class FolderService : IFolderService
 
     public async Task MoveToTrashAsync(string userId, Guid folderId, CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == folderId);
+        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+            x.UserId == userId &&
+            x.Id == folderId &&
+            x.Type == FileFolderType.Folder
+        );
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
 
         folder.IsInTrash = true;
-        
+
         // Also move all descendants to trash
-        var descendants = _dbContext.FileFolders.Where(x => 
+        var descendants = _dbContext.FileFolders.Where(x =>
             x.UserId == userId && x.Path.StartsWith(folder.Path + "/")).ToList();
-            
+
         foreach (var descendant in descendants)
         {
             descendant.IsInTrash = true;
         }
-        
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeletePermanentlyAsync(string userId, Guid folderId, CancellationToken cancellationToken = default)
+    public async Task DeletePermanentlyAsync(string userId, Guid folderId,
+        CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == folderId);
+        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+            x.UserId == userId &&
+            x.Id == folderId &&
+            x.Type == FileFolderType.Folder
+        );
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
 
         // Find all descendants of this folder
-        var descendants = _dbContext.FileFolders.Where(x => 
+        var descendants = _dbContext.FileFolders.Where(x =>
             x.UserId == userId && x.Path.StartsWith(folder.Path + "/")).ToList();
-            
+
         // Remove all descendants first
         _dbContext.FileFolders.RemoveRange(descendants);
-        
+
         // Then remove the folder itself
         _dbContext.FileFolders.Remove(folder);
-        
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RestoreFromTrashAsync(string userId, Guid folderId, CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == folderId);
+        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+            x.UserId == userId &&
+            x.Id == folderId &&
+            x.Type == FileFolderType.Folder
+        );
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
 
         folder.IsInTrash = false;
-        
+
         // Also restore all descendants from trash
-        var descendants = _dbContext.FileFolders.Where(x => 
+        var descendants = _dbContext.FileFolders.Where(x =>
             x.UserId == userId && x.Path.StartsWith(folder.Path + "/")).ToList();
-            
+
         foreach (var descendant in descendants)
         {
             descendant.IsInTrash = false;
         }
-        
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }
