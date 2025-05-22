@@ -9,12 +9,9 @@ namespace FileFlow.Application;
 
 public static class HostApplicationBuilderExtensions
 {
-    public static void AddApplication(this IHostApplicationBuilder builder)
+    public static void AddApplication(this IHostApplicationBuilder builder, Action<DbContextOptionsBuilder> dbContextOptionsAction)
     {
-        builder.Services.AddDbContext<AppDbContext>(optionsBuilder =>
-        {
-            optionsBuilder.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
-        });
+        builder.Services.AddDbContext<AppDbContext>(dbContextOptionsAction);
 
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());

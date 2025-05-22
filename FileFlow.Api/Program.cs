@@ -2,7 +2,9 @@ using System.Security.Claims;
 using FileFlow.Api;
 using FileFlow.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using AssemblyMarker = FileFlow.Api.AssemblyMarker;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +44,9 @@ builder.Services.AddCors(x =>
     })
 );
 
-builder.AddApplication();
+builder.AddApplication(x => x.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    b => b.MigrationsAssembly(typeof(AssemblyMarker).Assembly))
+);
 
 // Build the application.
 var app = builder.Build();
