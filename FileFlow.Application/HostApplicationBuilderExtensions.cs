@@ -17,6 +17,7 @@ public static class HostApplicationBuilderExtensions
 
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<IFileService, FileService>();
+        builder.Services.AddScoped<IFolderService, FolderService>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 
