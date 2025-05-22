@@ -1,4 +1,4 @@
-namespace FileFlow.Api.Endpoints.UserEndpoints;
+namespace FileFlow.Api.Endpoints.UserStorageEndpoints;
 
 public class GetStorageEndpoint : IEndpoint
 {
