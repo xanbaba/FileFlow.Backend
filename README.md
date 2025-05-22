@@ -11,7 +11,7 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 ### 2. File Management
 - **File Upload**: Support single and multiple file uploads
 - **File Download**: Allow downloading individual files
-- **File Metadata**: Store and retrieve file metadata (name, type, size, creation/modification dates)
+- **File Metadata**: Store and retrieve file metadata (name, type, size)
 - **File Content**: Store and serve file content
 - **File Renaming**: Allow renaming files
 - **File Moving**: Support moving files between folders
@@ -50,14 +50,15 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 ```json
 {
   "id": "string",
+  "userId": "string",
   "name": "string", // Includes extension (for files)
   "type": "string", // "file" or "folder"
-  "starred": "boolean",
-  "parentId": "number", // ID of parent folder, null if in root
+  "isStarred": "boolean",
+  "parentId": "number | null", // ID of parent folder, null if in root
   "path": "string", // Full path to the item (includes name)
-  "size": "number", // Size in MB (for files)
-  "fileType": "string", // MIME type (for files)
-  "inTrash": "boolean"
+  "size": "number | null", // Size in MB (for files)
+  "mimeType": "string | null", // MIME type (for files)
+  "isInTrash": "boolean"
 }
 ```
 
@@ -81,7 +82,7 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 
 ### Folder Endpoints
 - `POST /api/folders`: Create new folder
-- `GET /api/folders/{id}`: Get folder metadata and contents
+- `GET /api/folders/{id}`: Get folder metadata
 - `PUT /api/folders/{id}`: Update folder metadata (rename)
 - `DELETE /api/folders/{id}`: Move folder to trash
 - `POST /api/folders/{id}/restore`: Restore folder from trash
