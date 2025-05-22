@@ -7,10 +7,15 @@ internal class UserStorageEntityConfiguration : IEntityTypeConfiguration<UserSto
 {
     public void Configure(EntityTypeBuilder<UserStorage> builder)
     {
+        // Key
         builder.HasKey(x => x.Id);
+
+        // Indices
+        builder.HasIndex(x => x.UserId)
+            .IsUnique();
         
+        // Properties
         builder.Property(x => x.UserId)
-            .HasMaxLength(100)
-            .IsRequired();
+            .HasMaxLength(255);
     }
 }

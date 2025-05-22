@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FileFlow.Application.Database;
 
-internal class AppDbContext : DbContext
+public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -17,4 +17,5 @@ internal class AppDbContext : DbContext
     
     // Entities
     public DbSet<UserStorage> UserStorages { get; set; }
+    public DbSet<FileFolder> FileFolders { get; set; }
 }
