@@ -39,7 +39,7 @@ internal class FileFolderEntityConfiguration : IEntityTypeConfiguration<FileFold
         builder.Property(x => x.Path)
             .HasMaxLength(4000);
 
-        builder.Property(x => x.FileType)
+        builder.Property(x => x.FileCategory)
             .HasConversion<string>()
             .HasMaxLength(255);
     }

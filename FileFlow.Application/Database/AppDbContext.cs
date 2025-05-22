@@ -12,10 +12,11 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AssemblyMarker).Assembly);
     }
     
     // Entities
     public DbSet<UserStorage> UserStorages { get; set; }
     public DbSet<FileFolder> FileFolders { get; set; }
+    public DbSet<FileExtensionCategory> FileExtensionCategories { get; set; }
 }
