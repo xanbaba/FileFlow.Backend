@@ -7,7 +7,7 @@ public static class WebApplicationExtensions
     public static void AddEndpoints(this IServiceCollection collection)
     {
         collection.Scan(scan =>
-            scan.FromAssemblyOf<ProjectReference>()
+            scan.FromAssemblyOf<AssemblyMarker>()
                 .AddClasses(classes =>
                     classes.AssignableTo<IEndpoint>())
                 .AsImplementedInterfaces()
