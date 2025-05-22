@@ -1,4 +1,5 @@
 using FileFlow.Application.Database;
+using FileFlow.Application.FileStorage;
 using FileFlow.Application.MessageBus;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
@@ -18,6 +19,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IFileService, FileService>();
         builder.Services.AddScoped<IFolderService, FolderService>();
         builder.Services.AddScoped<IItemService, ItemService>();
+        builder.Services.AddScoped<IFileStorage, FileStorage.FileStorage>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 
