@@ -72,9 +72,10 @@ Based on the analysis of the frontend code, here's a comprehensive plan for the 
 - `GET /api/users/storage`: Get user storage
 
 ### File Endpoints
-- `POST /api/files`: Upload new file(s)
+- `POST /api/files`: Upload new file
 - `GET /api/files/{id}`: Get file metadata
-- `GET /api/files/{id}/content`: Download file content
+- `GET /api/files/{id}/download`: Download file content
+- `GET /api/files/{id}/preview`: Preview file content
 - `PUT /api/files/{id}`: Update file metadata (rename)
 - `DELETE /api/files/{id}`: Move file to trash
 - `POST /api/files/{id}/restore`: Restore file from trash

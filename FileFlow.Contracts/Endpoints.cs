@@ -18,9 +18,10 @@ public static class Endpoints
         // Methods
         public const string UploadFile = Base;
         public const string GetFile = $"{Base}/{{id:guid}}";
-        public const string GetFileContent = $"{Base}/{{id:guid}}/content";
-        public const string UpdateFile = $"{Base}/{{id:guid}}";
-        public const string DeleteFile = $"{Base}/{{id:guid}}";
+        public const string DownloadFile = $"{Base}/{{id:guid}}/download";
+        public const string PreviewFile = $"{Base}/{{id:guid}}/preview";
+        public const string RenameFile = $"{Base}/{{id:guid}}";
+        public const string MoveFileToTrash = $"{Base}/{{id:guid}}";
         public const string RestoreFile = $"{Base}/{{id:guid}}/restore";
         public const string PermanentDeleteFile = $"{Base}/{{id:guid}}/permanent";
     }
