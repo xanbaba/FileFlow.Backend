@@ -17,12 +17,12 @@ public static class Endpoints
         
         // Methods
         public const string UploadFile = Base;
-        public const string GetFile = $"{Base}/{{id}}";
-        public const string GetFileContent = $"{Base}/{{id}}/content";
-        public const string UpdateFile = $"{Base}/{{id}}";
-        public const string DeleteFile = $"{Base}/{{id}}";
-        public const string RestoreFile = $"{Base}/{{id}}/restore";
-        public const string PermanentDeleteFile = $"{Base}/{{id}}/permanent";
+        public const string GetFile = $"{Base}/{{id:guid}}";
+        public const string GetFileContent = $"{Base}/{{id:guid}}/content";
+        public const string UpdateFile = $"{Base}/{{id:guid}}";
+        public const string DeleteFile = $"{Base}/{{id:guid}}";
+        public const string RestoreFile = $"{Base}/{{id:guid}}/restore";
+        public const string PermanentDeleteFile = $"{Base}/{{id:guid}}/permanent";
     }
     
     public static class FolderEndpoints
@@ -31,11 +31,11 @@ public static class Endpoints
         
         // Methods
         public const string CreateFolder = Base;
-        public const string GetFolder = $"{Base}/{{id}}";
-        public const string UpdateFolder = $"{Base}/{{id}}";
-        public const string DeleteFolder = $"{Base}/{{id}}";
-        public const string RestoreFolder = $"{Base}/{{id}}/restore";
-        public const string PermanentDeleteFolder = $"{Base}/{{id}}/permanent";
+        public const string GetFolder = $"{Base}/{{id:guid}}";
+        public const string UpdateFolder = $"{Base}/{{id:guid}}";
+        public const string DeleteFolder = $"{Base}/{{id:guid}}";
+        public const string RestoreFolder = $"{Base}/{{id:guid}}/restore";
+        public const string PermanentDeleteFolder = $"{Base}/{{id:guid}}/permanent";
     }
     
     public static class ItemsEndpoints
@@ -45,11 +45,11 @@ public static class Endpoints
         // Methods
         public const string GetAllItems = Base;
         public const string GetStarredItems = $"{Base}/starred";
-        public const string StarItem = $"{Base}/{{id}}/star";
-        public const string UnstarItem = $"{Base}/{{id}}/star";
+        public const string StarItem = $"{Base}/{{id:guid}}/star";
+        public const string UnstarItem = $"{Base}/{{id:guid}}/star";
         public const string GetRecentItems = $"{Base}/recent";
         public const string GetTrashItems = $"{Base}/trash";
-        public const string MoveItem = $"{Base}/{{id}}/move";
+        public const string MoveItem = $"{Base}/{{id:guid}}/move";
     }
     
     public static class TrashEndpoints
