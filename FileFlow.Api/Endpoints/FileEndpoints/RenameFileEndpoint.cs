@@ -18,7 +18,8 @@ public class RenameFileEndpoint : IEndpoint
             .RequireAuthorization()
             .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     public string Name => nameof(RenameFileEndpoint);

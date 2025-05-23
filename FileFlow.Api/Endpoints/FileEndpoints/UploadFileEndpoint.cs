@@ -16,20 +16,16 @@ public class UploadFileEndpoint : IEndpoint
                     var uploadedFile = await fileService.UploadAsync(user.GetUserid(), file.FileName, request.TargetFolderPath,
                         file.OpenReadStream(), cancellationToken);
                     
-                    return Results.Ok(new FileFolderResponse
-                    {
-                        Id = uploadedFile.Id,
-                        UserId = uploadedFile.UserId,
-                        Name = uploadedFile.Name,
-                        Type = uploadedFile.Type.ToString().ToLower(),
-                        IsStarred = uploadedFile.IsStarred,
-                        Path = uploadedFile.Path
-                    });
+                    return Results.Ok(uploadedFile.ToResponse());
                     
                 })
             .WithName(Name)
             .RequireAuthorization()
-            .Accepts<IFormFile>("multipart/form-data");
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     public string Name => nameof(UploadFileEndpoint);
