@@ -1,27 +1,27 @@
 using System.Security.Claims;
 using FileFlow.Application.Services.Abstractions;
-using FileFlow.Contracts.Responses;
-using FileNotFoundException = FileFlow.Application.Services.Exceptions.FileNotFoundException;
 
 namespace FileFlow.Api.Endpoints.FileEndpoints;
 
-public class GetFileEndpoint : IEndpoint
+public class DownloadFileEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder builder)
     {
-        builder.MapGet(Contracts.Endpoints.FileEndpoints.GetFile,
+        builder.MapGet(Contracts.Endpoints.FileEndpoints.DownloadFile,
                 async (Guid id, IFileService fileService, ClaimsPrincipal user, CancellationToken cancellationToken) =>
                 {
                     var userId = user.GetUserid();
                     var fileMetadata = await fileService.GetMetadataAsync(userId, id, cancellationToken);
-                    return Results.Ok(fileMetadata);
+                    var contentStream = await fileService.GetContentAsync(userId, id, cancellationToken);
+                    return Results.Stream(contentStream, FileEndpointHelpers.GetMimeType(fileMetadata.Name),
+                        fileMetadata.Name, enableRangeProcessing: true);
                 })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces<FileFolderResponse>()
+            .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
     }
 
-    public string Name => nameof(GetFileEndpoint);
+    public string Name => nameof(DownloadFileEndpoint);
 }

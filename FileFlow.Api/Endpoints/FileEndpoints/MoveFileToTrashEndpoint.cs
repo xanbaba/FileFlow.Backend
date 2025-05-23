@@ -1,27 +1,25 @@
 using System.Security.Claims;
 using FileFlow.Application.Services.Abstractions;
-using FileFlow.Contracts.Responses;
-using FileNotFoundException = FileFlow.Application.Services.Exceptions.FileNotFoundException;
 
 namespace FileFlow.Api.Endpoints.FileEndpoints;
 
-public class GetFileEndpoint : IEndpoint
+public class MoveFileToTrashEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder builder)
     {
-        builder.MapGet(Contracts.Endpoints.FileEndpoints.GetFile,
+        builder.MapDelete(Contracts.Endpoints.FileEndpoints.MoveFileToTrash,
                 async (Guid id, IFileService fileService, ClaimsPrincipal user, CancellationToken cancellationToken) =>
                 {
                     var userId = user.GetUserid();
-                    var fileMetadata = await fileService.GetMetadataAsync(userId, id, cancellationToken);
-                    return Results.Ok(fileMetadata);
+                    await fileService.MoveToTrashAsync(userId, id, cancellationToken);
+                    return Results.NoContent();
                 })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces<FileFolderResponse>()
+            .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
     }
 
-    public string Name => nameof(GetFileEndpoint);
+    public string Name => nameof(MoveFileToTrashEndpoint);
 }
