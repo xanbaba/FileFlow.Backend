@@ -16,7 +16,7 @@ public class AppDbContext : DbContext
     }
     
     // Entities
-    public DbSet<UserStorage> UserStorages { get; set; }
-    public DbSet<FileFolder> FileFolders { get; set; }
-    public DbSet<FileExtensionCategory> FileExtensionCategories { get; set; }
+    internal DbSet<UserStorage> UserStorages { get; set; }
+    internal DbSet<FileFolder> FileFolders { get; set; }
+    internal DbSet<FileExtensionCategory> FileExtensionCategories { get; set; }
 }
