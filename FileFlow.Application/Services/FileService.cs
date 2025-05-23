@@ -18,49 +18,45 @@ internal class FileService : IFileService
         _fileStorage = fileStorage;
     }
 
-    public async Task<IEnumerable<FileFolder>> UploadAsync(FileUpload[] uploadRequests,
+    public async Task<FileFolder> UploadAsync(string userId, string fileName, string? targetFolderPath, Stream stream,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            List<FileFolder> files = [];
-            foreach (var uploadRequest in uploadRequests)
+            Guid? parentId = null;
+            if (targetFolderPath is not null)
             {
-                Guid? parentId = null;
-                if (uploadRequest.TargetFolderPath is not null)
-                {
-                    var parent = _dbContext.FileFolders.FirstOrDefault(x =>
-                        x.UserId == uploadRequest.UserId && x.Path == uploadRequest.TargetFolderPath);
-                    if (parent is null)
-                        throw new FolderNotFoundException(uploadRequest.UserId, uploadRequest.TargetFolderPath);
-                    parentId = parent.Id;
-                }
-
-                var file = new FileFolder
-                {
-                    Id = Guid.CreateVersion7(),
-                    IsStarred = false,
-                    IsInTrash = false,
-                    UserId = uploadRequest.UserId,
-                    Name = uploadRequest.FileName,
-                    Path = Path.Join(uploadRequest.TargetFolderPath ?? string.Empty, uploadRequest.FileName),
-                    Size = (int)(uploadRequest.Stream.Length / (1024.0 * 1024.0)),
-                    Type = FileFolderType.File,
-                    ParentId = parentId,
-                    FileCategory =
-                        _dbContext.FileExtensionCategories
-                            .FirstOrDefault(x => x.Extension == Path.GetExtension(uploadRequest.FileName))?.Category ??
-                        FileCategory.Other
-                };
-
-                _dbContext.FileFolders.Add(file);
-                files.Add(file);
-                await _fileStorage.UploadFileAsync(file.Id, uploadRequest.Stream);
+                var parent = _dbContext.FileFolders.FirstOrDefault(x =>
+                    x.UserId == userId && x.Path == targetFolderPath);
+                if (parent is null)
+                    throw new FolderNotFoundException(userId, targetFolderPath);
+                parentId = parent.Id;
             }
+
+            var file = new FileFolder
+            {
+                Id = Guid.CreateVersion7(),
+                IsStarred = false,
+                IsInTrash = false,
+                UserId = userId,
+                // ToDo: Validate file name before uploading
+                Name = fileName,
+                Path = Path.Join(targetFolderPath ?? string.Empty, fileName),
+                Size = (int)(stream.Length / (1024.0 * 1024.0)),
+                Type = FileFolderType.File,
+                ParentId = parentId,
+                FileCategory =
+                    _dbContext.FileExtensionCategories
+                        .FirstOrDefault(x => x.Extension == Path.GetExtension(fileName))?.Category ??
+                    FileCategory.Other
+            };
+
+            _dbContext.FileFolders.Add(file);
+            await _fileStorage.UploadFileAsync(file.Id, stream);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
             await _fileStorage.CommitAsync();
-            return files;
+            return file;
         }
         catch (Exception)
         {
@@ -81,11 +77,6 @@ internal class FileService : IFileService
         var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
         if (file is null) throw new FileNotFoundException(userId, fileId);
 
-        if (file.UserId != userId)
-        {
-            throw new UnauthorizedAccessException();
-        }
-        
         return _fileStorage.DownloadFileAsync(fileId);
     }
 
@@ -95,6 +86,7 @@ internal class FileService : IFileService
         var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
         if (file is null) throw new FileNotFoundException(userId, fileId);
 
+        // ToDo: Validate new name before renaming
         file.Name = newFileName;
 
         file.Path = string.Join('/', file.Path.Split('/').SkipLast(1), newFileName);
