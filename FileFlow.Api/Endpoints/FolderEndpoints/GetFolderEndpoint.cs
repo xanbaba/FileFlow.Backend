@@ -16,17 +16,11 @@ public class GetFolderEndpoint : IEndpoint
             {
                 var userId = user.GetUserid();
                 var folder = await folderService.GetMetadataAsync(userId, id, cancellationToken);
-                var children = await folderService.GetChildrenAsync(userId, id, cancellationToken);
-                
-                return Results.Ok(new FolderDetailsResponse
-                {
-                    Folder = folder.ToResponse(),
-                    Children = children.Select(Mapper.ToResponse).ToList()
-                });
+                return Results.Ok(folder.ToResponse());
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces<FolderDetailsResponse>(StatusCodes.Status200OK)
+            .Produces<FileFolderResponse>()
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
     }
