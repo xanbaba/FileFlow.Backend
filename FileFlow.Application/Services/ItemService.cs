@@ -14,15 +14,6 @@ internal class ItemService : IItemService
         _dbContext = dbContext;
     }
 
-    public Task<IEnumerable<FileFolder>> GetAllAsync(string userId, CancellationToken cancellationToken = default)
-    {
-        var items = _dbContext.FileFolders
-            .Where(x => x.UserId == userId)
-            .ToList();
-        
-        return Task.FromResult<IEnumerable<FileFolder>>(items);
-    }
-
     public Task<IEnumerable<FileFolder>> GetStarredAsync(string userId, CancellationToken cancellationToken = default)
     {
         var items = _dbContext.FileFolders

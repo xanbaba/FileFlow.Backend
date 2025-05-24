@@ -33,6 +33,7 @@ public static class Endpoints
         // Methods
         public const string CreateFolder = Base;
         public const string GetFolder = $"{Base}/{{id:guid}}";
+        public const string GetChildren = $"{Base}/{{id:guid}}/children";
         public const string UpdateFolder = $"{Base}/{{id:guid}}";
         public const string DeleteFolder = $"{Base}/{{id:guid}}";
         public const string RestoreFolder = $"{Base}/{{id:guid}}/restore";
@@ -44,7 +45,6 @@ public static class Endpoints
         public const string Base = $"{ApiBase}/items";
         
         // Methods
-        public const string GetAllItems = Base;
         public const string GetStarredItems = $"{Base}/starred";
         public const string StarItem = $"{Base}/{{id:guid}}/star";
         public const string UnstarItem = $"{Base}/{{id:guid}}/star";

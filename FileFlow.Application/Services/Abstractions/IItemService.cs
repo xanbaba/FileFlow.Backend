@@ -4,8 +4,6 @@ namespace FileFlow.Application.Services.Abstractions;
 
 public interface IItemService
 {
-    public Task<IEnumerable<FileFolder>> GetAllAsync(string userId, CancellationToken cancellationToken = default);
-    
     public Task<IEnumerable<FileFolder>> GetStarredAsync(string userId, CancellationToken cancellationToken = default);
     
     public Task<IEnumerable<FileFolder>> GetRecentAsync(string userId, CancellationToken cancellationToken = default);
