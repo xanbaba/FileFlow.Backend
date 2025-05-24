@@ -67,7 +67,8 @@ internal class FolderService : IFolderService
         var folder = _dbContext.FileFolders.FirstOrDefault(x =>
             x.UserId == userId &&
             x.Id == folderId &&
-            x.Type == FileFolderType.Folder
+            x.Type == FileFolderType.Folder &&
+            !x.IsInTrash
         );
 
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
