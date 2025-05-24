@@ -28,6 +28,6 @@ public static class HostApplicationBuilderExtensions
         using var serviceScope = app.Services.CreateScope();
 
         var appDbContext = serviceScope.ServiceProvider.GetRequiredService<AppDbContext>();
-        appDbContext.Database.EnsureCreated();
+        appDbContext.Database.Migrate();
     }
 }
