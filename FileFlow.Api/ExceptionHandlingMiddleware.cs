@@ -1,5 +1,6 @@
 using FileFlow.Application.Services.Exceptions;
 using FluentValidation;
+using JetBrains.Annotations;
 using FileNotFoundException = FileFlow.Application.Services.Exceptions.FileNotFoundException;
 
 namespace FileFlow.Api;
@@ -36,7 +37,11 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             await context.Response.WriteAsJsonAsync(new ErrorMessage(e.Message));
-
+        }
+        catch (Exception e) when (e is FileAlreadyExistsException or FolderAlreadyExistsException)
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            await context.Response.WriteAsJsonAsync(new ErrorMessage(e.Message));
         }
         catch (Exception ex)
         {
@@ -49,14 +54,14 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
 public class ValidationFailureResponse
 {
-    public required IEnumerable<ValidationResponse> Errors { get; init; }
+    public required IEnumerable<ValidationResponse> Errors { [UsedImplicitly] get; init; }
 }
 
 public class ValidationResponse
 {
-    public required string PropertyName { get; init; }
+    public required string PropertyName { [UsedImplicitly] get; init; }
 
-    public required string Message { get; init; }
+    public required string Message { [UsedImplicitly] get; init; }
 }
 
-public record ErrorMessage(string Message);
+public record ErrorMessage([UsedImplicitly] string Message);
