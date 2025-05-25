@@ -33,7 +33,7 @@ public class MoveItemEndpoint : IEndpoint
                               "### Route Parameters\n" +
                               "- **id** (Guid): The unique identifier of the file or folder to move.\n\n" +
                               "### Request Body\n" +
-                              "- **DestinationFolderId** (string): The ID of the destination folder. Use \"root\" for the root folder or a valid GUID for a specific folder.\n\n" +
+                              "- **DestinationFolderId** (string): The ID of the destination folder. If not specified, root is used\n\n" +
                               "### Behavior\n" +
                               "- Only moves items that belong to the authenticated user\n" +
                               "- Updates the ParentId and Path properties of the moved item\n" +

@@ -81,7 +81,7 @@ internal class ItemService : IItemService
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task MoveToFolderAsync(string userId, Guid itemId, Guid targetFolderId, CancellationToken cancellationToken = default)
+    public async Task MoveToFolderAsync(string userId, Guid itemId, Guid? targetFolderId, CancellationToken cancellationToken = default)
     {
         var item = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == itemId);
         if (item is null)
@@ -89,16 +89,16 @@ internal class ItemService : IItemService
             throw new ItemNotFoundException(userId, itemId);
         }
 
-        var targetFolder = _dbContext.FileFolders.FirstOrDefault(x => 
+        var targetFolder = targetFolderId is null ? null : _dbContext.FileFolders.FirstOrDefault(x => 
             x.UserId == userId && x.Id == targetFolderId && x.Type == FileFolderType.Folder && !x.IsInTrash);
         
-        if (targetFolder is null)
+        if (targetFolderId is not null && targetFolder is null)
         {
-            throw new FolderNotFoundException(userId, targetFolderId);
+            throw new FolderNotFoundException(userId, targetFolderId.Value);
         }
         
         // Check if trying to move a folder into its own subfolder
-        if (item.Type == FileFolderType.Folder && 
+        if (targetFolder is not null && item.Type == FileFolderType.Folder && 
             (targetFolder.Path.StartsWith(item.Path + "/") || targetFolder.Id == itemId))
         {
             throw new InvalidOperationException("Cannot move a folder into its own subfolder");
@@ -108,7 +108,7 @@ internal class ItemService : IItemService
         
         // Update item's path and parent
         item.ParentId = targetFolderId;
-        item.Path = Path.Join(targetFolder.Path, item.Name);
+        item.Path = Path.Join(targetFolder?.Path ?? "/", item.Name);
         
         // If it's a folder, update paths of all descendants
         if (item.Type == FileFolderType.Folder)

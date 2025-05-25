@@ -16,5 +16,5 @@ public interface IItemService
     
     public Task EmptyTrashAsync(string userId, CancellationToken cancellationToken = default);
     
-    public Task MoveToFolderAsync(string userId, Guid itemId, Guid targetFolderId, CancellationToken cancellationToken = default);
+    public Task MoveToFolderAsync(string userId, Guid itemId, Guid? targetFolderId, CancellationToken cancellationToken = default);
 }
