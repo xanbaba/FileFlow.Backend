@@ -30,6 +30,11 @@ internal class FolderService : IFolderService
             parentId = parent.Id;
         }
 
+        var path = Path.Join(targetFolder ?? string.Empty, folderName);
+        if (_dbContext.FileFolders.Any(x => x.UserId == userId && x.Path == path))
+        {
+            throw new FolderAlreadyExistsException(userId, path);
+        }
         var folder = new FileFolder
         {
             Id = Guid.NewGuid(),
@@ -37,7 +42,7 @@ internal class FolderService : IFolderService
             IsInTrash = false,
             UserId = userId,
             Name = folderName,
-            Path = Path.Join(targetFolder ?? string.Empty, folderName),
+            Path = path,
             Size = 0,
             Type = FileFolderType.Folder,
             ParentId = parentId,

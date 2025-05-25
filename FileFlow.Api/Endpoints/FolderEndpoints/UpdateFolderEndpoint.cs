@@ -24,7 +24,7 @@ public class UpdateFolderEndpoint : IEndpoint
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces<FileFolderResponse>(StatusCodes.Status200OK)
+            .Produces<FileFolderResponse>()
             .Produces<ErrorMessage>(StatusCodes.Status400BadRequest)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)

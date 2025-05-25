@@ -33,6 +33,11 @@ internal class FileService : IFileService
                 parentId = parent.Id;
             }
 
+            var path = Path.Join(targetFolderPath ?? string.Empty, fileName);
+            if (_dbContext.FileFolders.Any(x => x.UserId == userId && x.Path == path))
+            {
+                throw new FileAlreadyExistsException(userId, path);
+            }
             var file = new FileFolder
             {
                 Id = Guid.CreateVersion7(),
@@ -41,7 +46,7 @@ internal class FileService : IFileService
                 UserId = userId,
                 // ToDo: Validate file name before uploading
                 Name = fileName,
-                Path = Path.Join(targetFolderPath ?? string.Empty, fileName),
+                Path = path,
                 Size = (int)(stream.Length / (1024.0 * 1024.0)),
                 Type = FileFolderType.File,
                 ParentId = parentId,
