@@ -10,7 +10,7 @@ public class FileExtensionCategory
     public FileCategory Category { get; set; }
 }
 
-public class FileExtensionCategoryEntityConfiguration : IEntityTypeConfiguration<FileExtensionCategory>
+internal  class FileExtensionCategoryEntityConfiguration : IEntityTypeConfiguration<FileExtensionCategory>
 {
     public void Configure(EntityTypeBuilder<FileExtensionCategory> builder)
     {
