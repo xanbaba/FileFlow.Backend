@@ -2,6 +2,7 @@ using FileFlow.Application.Database;
 using FileFlow.Application.MessageBus;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
+using FileFlow.Application.Utilities.EmailUtility;
 using FileFlow.Application.Utilities.FileStorageUtility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,8 @@ namespace FileFlow.Application;
 
 public static class HostApplicationBuilderExtensions
 {
-    public static void AddApplication(this IHostApplicationBuilder builder, Action<DbContextOptionsBuilder> dbContextOptionsAction)
+    public static void AddApplication(this IHostApplicationBuilder builder,
+        Action<DbContextOptionsBuilder> dbContextOptionsAction)
     {
         builder.Services.AddDbContext<AppDbContext>(dbContextOptionsAction);
 
@@ -20,6 +22,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IFolderService, FolderService>();
         builder.Services.AddScoped<IItemService, ItemService>();
         builder.Services.AddScoped<IFileStorage, FileStorage>();
+        builder.Services.AddScoped<ISupportEmail, SupportEmail>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 
