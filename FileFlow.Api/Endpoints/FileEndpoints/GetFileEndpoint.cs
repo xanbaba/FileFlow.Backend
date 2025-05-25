@@ -20,7 +20,20 @@ public class GetFileEndpoint : IEndpoint
             .RequireAuthorization()
             .Produces<FileFolderResponse>()
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithOpenApi(op => new(op)
+            {
+                Summary = "Retrieves metadata for a specific file",
+                Description = "Retrieves detailed metadata for a specified file without its content.\n\n" +
+                              "### Route Parameters\n" +
+                              "- **id** (Guid): The unique identifier of the file to retrieve metadata for.\n\n" +
+                              "### Behavior\n" +
+                              "- Returns metadata for the specified file if it belongs to the authenticated user\n" +
+                              "- Will return file metadata even if the file is in trash\n" +
+                              "- Does not return the actual file content (use the download endpoint for that)\n\n" +
+                              "### Response\n" +
+                              "Returns a FileFolderResponse object containing metadata about the file, including its name, path, size, and other properties."
+            });
     }
 
     public string Name => nameof(GetFileEndpoint);

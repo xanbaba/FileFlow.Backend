@@ -20,7 +20,21 @@ public class DownloadFileEndpoint : IEndpoint
             .RequireAuthorization()
             .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithOpenApi(op => new(op)
+            {
+                Summary = "Downloads a file's content",
+                Description = "Provides the actual content of a file for download with appropriate content type and filename.\n\n" +
+                              "### Route Parameters\n" +
+                              "- **id** (Guid): The unique identifier of the file to download.\n\n" +
+                              "### Behavior\n" +
+                              "- Retrieves file metadata to determine the name and content type\n" +
+                              "- Streams the file content with range processing enabled for supporting large files\n" +
+                              "- Only allows downloading files that belong to the authenticated user\n" +
+                              "- Can download files even if they are in trash\n\n" +
+                              "### Response\n" +
+                              "Returns a stream containing the file content with the appropriate MIME type and original filename."
+            });
     }
 
     public string Name => nameof(DownloadFileEndpoint);

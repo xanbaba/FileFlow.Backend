@@ -61,17 +61,16 @@ internal class FolderService : IFolderService
         return Task.FromResult(folder);
     }
 
-    public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid folderId,
+    public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid? folderId,
         CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
-            x.UserId == userId &&
-            x.Id == folderId &&
-            x.Type == FileFolderType.Folder &&
-            !x.IsInTrash
-        );
-
-        if (folder is null) throw new FolderNotFoundException(userId, folderId);
+        if (folderId is not null && !_dbContext.FileFolders.Any(x => x.UserId == userId &&
+                                                                     x.Id == folderId &&
+                                                                     x.Type == FileFolderType.Folder &&
+                                                                     !x.IsInTrash))
+        {
+            throw new FolderNotFoundException(userId, folderId.Value);
+        }
 
         var children = _dbContext.FileFolders.Where(x => x.UserId == userId && x.ParentId == folderId).ToList();
         return Task.FromResult<IEnumerable<FileFolder>>(children);

@@ -10,7 +10,7 @@ public interface IFolderService
     public Task<FileFolder> GetMetadataAsync(string userId, Guid folderId,
         CancellationToken cancellationToken = default);
 
-    public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid folderId,
+    public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid? folderId,
         CancellationToken cancellationToken = default);
 
     public Task RenameAsync(string userId, Guid folderId, string newFolderName,
