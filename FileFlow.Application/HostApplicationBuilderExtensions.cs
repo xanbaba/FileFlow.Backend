@@ -1,8 +1,8 @@
 using FileFlow.Application.Database;
-using FileFlow.Application.FileStorage;
 using FileFlow.Application.MessageBus;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
+using FileFlow.Application.Utilities.FileStorageUtility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +19,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IFileService, FileService>();
         builder.Services.AddScoped<IFolderService, FolderService>();
         builder.Services.AddScoped<IItemService, ItemService>();
-        builder.Services.AddScoped<IFileStorage, FileStorage.FileStorage>();
+        builder.Services.AddScoped<IFileStorage, FileStorage>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 

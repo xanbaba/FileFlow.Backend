@@ -2,7 +2,7 @@ using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
 using FileNotFoundException = FileFlow.Application.Services.Exceptions.FileNotFoundException;
 
-namespace FileFlow.Application.FileStorage;
+namespace FileFlow.Application.Utilities.FileStorageUtility;
 
 internal class FileStorage : IFileStorage
 {

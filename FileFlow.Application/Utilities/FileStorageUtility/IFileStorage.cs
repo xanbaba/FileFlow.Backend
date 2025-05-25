@@ -1,4 +1,4 @@
-namespace FileFlow.Application.FileStorage;
+namespace FileFlow.Application.Utilities.FileStorageUtility;
 
 internal interface IFileStorage
 {
