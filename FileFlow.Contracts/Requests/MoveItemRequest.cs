@@ -1,3 +1,3 @@
 namespace FileFlow.Contracts.Requests;
 
-public record MoveItemRequest(Guid TargetFolderId);
+public record MoveItemRequest(Guid? TargetFolderId);
