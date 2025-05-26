@@ -3,6 +3,7 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.Options;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
+using FileFlow.Application.Utilities.Auth0Utility;
 using FileFlow.Application.Utilities.EmailUtility;
 using FileFlow.Application.Utilities.FileStorageUtility;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,8 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IItemService, ItemService>();
         builder.Services.AddScoped<IFileStorage, FileStorage>();
         builder.Services.AddScoped<ISupportEmail, SupportEmail>();
+        builder.Services.AddSingleton<IAuth0AccessTokenProvider, Auth0AccessTokenProvider>();
+        builder.Services.AddScoped<IUserUtility, UserUtility>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 

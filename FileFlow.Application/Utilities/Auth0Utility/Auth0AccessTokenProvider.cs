@@ -16,7 +16,8 @@ internal class Auth0AccessTokenProvider : IAuth0AccessTokenProvider
         _client = httpClientFactory.CreateClient("Auth0Client");
     }
 
-    private static string? _accessToken;
+    private string? _accessToken;
+    private readonly Lock _accessTokenLock = new();
 
     public async Task<string> GetAccessTokenAsync()
     {
@@ -48,6 +49,9 @@ internal class Auth0AccessTokenProvider : IAuth0AccessTokenProvider
         response.EnsureSuccessStatusCode();
         var responseContent = await response.Content.ReadAsStringAsync();
         var responseContentDeserialized = JsonSerializer.Deserialize<dynamic>(responseContent)!;
-        _accessToken = responseContentDeserialized.access_token;
+        lock (_accessTokenLock)
+        {
+            _accessToken = responseContentDeserialized.access_token;
+        }
     }
 }
