@@ -3,6 +3,7 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.Options;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
+using FileFlow.Application.Utilities.Auth0Utility;
 using FileFlow.Application.Utilities.EmailUtility;
 using FileFlow.Application.Utilities.FileStorageUtility;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,11 @@ public static class HostApplicationBuilderExtensions
         
         builder.Services.Configure<Auth0Options>(
             builder.Configuration.GetSection("Auth0"));
+        
+        builder.Services.AddHttpClient("Auth0Client", client =>
+        {
+            client.BaseAddress = new Uri(builder.Configuration["Auth0:Domain"]!);
+        });
 
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<IFileService, FileService>();
