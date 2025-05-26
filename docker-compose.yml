@@ -21,6 +21,7 @@ services:
       - "10000:10000"
     volumes:
       - azurite_blob_data:/data
+    restart: unless-stopped
     networks:
       - azurite-net
 
