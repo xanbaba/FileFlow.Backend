@@ -1,5 +1,6 @@
 using FileFlow.Application.Database;
 using FileFlow.Application.MessageBus;
+using FileFlow.Application.Options;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Utilities.EmailUtility;
@@ -16,6 +17,9 @@ public static class HostApplicationBuilderExtensions
         Action<DbContextOptionsBuilder> dbContextOptionsAction)
     {
         builder.Services.AddDbContext<AppDbContext>(dbContextOptionsAction);
+        
+        builder.Services.Configure<Auth0Options>(
+            builder.Configuration.GetSection("Auth0"));
 
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<IFileService, FileService>();
