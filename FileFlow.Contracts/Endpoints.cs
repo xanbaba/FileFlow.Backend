@@ -60,4 +60,12 @@ public static class Endpoints
         // Methods
         public const string EmptyTrash = $"{Base}/empty";
     }
+
+    public static class SupportEndpoints
+    {
+        public const string Base = $"{ApiBase}/support";
+        
+        // Methods
+        public const string SendSupportMessage = $"{Base}/messages";
+    }
 }

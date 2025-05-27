@@ -33,7 +33,8 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
 
             await context.Response.WriteAsJsonAsync(validationFailureResponse);
         }
-        catch (Exception e) when (e is FileNotFoundException or FolderNotFoundException or ItemNotFoundException)
+        catch (Exception e) when (e is FileNotFoundException or FolderNotFoundException or ItemNotFoundException
+                                      or UserNotFoundException)
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             await context.Response.WriteAsJsonAsync(new ErrorMessage(e.Message));

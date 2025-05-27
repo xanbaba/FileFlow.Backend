@@ -34,6 +34,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IFileService, FileService>();
         builder.Services.AddScoped<IFolderService, FolderService>();
         builder.Services.AddScoped<IItemService, ItemService>();
+        builder.Services.AddScoped<ISupportService, SupportService>();
         builder.Services.AddScoped<IFileStorage, FileStorage>();
         builder.Services.AddScoped<ISupportEmail, SupportEmail>();
         builder.Services.AddSingleton<IAuth0AccessTokenProvider, Auth0AccessTokenProvider>();
