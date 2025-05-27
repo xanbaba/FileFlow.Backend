@@ -8,7 +8,6 @@ public static class Mapper
     public static FileFolderResponse ToResponse(this FileFolder fileFolder) => new()
     {
         Id = fileFolder.Id,
-        UserId = fileFolder.UserId,
         Name = fileFolder.Name,
         Type = fileFolder.Type.ToString().ToLower(),
         IsStarred = fileFolder.IsStarred,

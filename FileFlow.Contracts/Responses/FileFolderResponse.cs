@@ -8,11 +8,6 @@ public class FileFolderResponse
     public required Guid Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the unique identifier associated with the user who owns or is linked to the file or folder entity.
-    /// </summary>
-    public required string UserId { get; set; }
-
-    /// <summary>
     /// Gets or sets the name of the file or folder, including the extension for files.
     /// </summary>
     public required string Name { get; set; } // Includes extension (for files)
