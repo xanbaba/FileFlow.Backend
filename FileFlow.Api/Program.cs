@@ -3,7 +3,9 @@ using FileFlow.Api;
 using FileFlow.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using AssemblyMarker = FileFlow.Api.AssemblyMarker;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +49,8 @@ builder.Services.AddCors(x =>
 builder.AddApplication(x => x.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"),
     b => b.MigrationsAssembly(typeof(AssemblyMarker).Assembly))
 );
+
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
 // Build the application.
 var app = builder.Build();
