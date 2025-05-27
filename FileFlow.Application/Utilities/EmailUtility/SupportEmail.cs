@@ -13,7 +13,7 @@ internal class SupportEmail : ISupportEmail
         _settings = options.Value;
     }
 
-    public async Task SendContactSupportMessageAsync(string userEmail, string subject, string message)
+    public async Task SendContactSupportMessageAsync(string userEmail, string subject, string message, CancellationToken cancellationToken = default)
     {
         using var smtpClient = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort);
         smtpClient.Credentials = new NetworkCredential(_settings.SenderEmail, _settings.SenderPassword);
@@ -22,7 +22,7 @@ internal class SupportEmail : ISupportEmail
         var mailMessage = new MailMessage
         {
             From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
-            Subject = subject,
+            Subject = $"File Flow Support: {subject}",
             Body = $"Message from: {userEmail}\n\n{message}",
             IsBodyHtml = false
         };
@@ -30,6 +30,6 @@ internal class SupportEmail : ISupportEmail
         // Email will be sent to your own support inbox
         mailMessage.To.Add(_settings.SenderEmail);
 
-        await smtpClient.SendMailAsync(mailMessage);
+        await smtpClient.SendMailAsync(mailMessage, cancellationToken);
     }
 }
