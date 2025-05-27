@@ -44,6 +44,11 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             context.Response.StatusCode = StatusCodes.Status409Conflict;
             await context.Response.WriteAsJsonAsync(new ErrorMessage(e.Message));
         }
+        catch (Exception e) when (e is InvalidOperationException)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsJsonAsync(new ErrorMessage(e.Message));
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception occurred.");

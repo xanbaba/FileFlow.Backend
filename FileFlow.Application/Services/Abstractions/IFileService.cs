@@ -4,7 +4,7 @@ namespace FileFlow.Application.Services.Abstractions;
 
 public interface IFileService
 {
-    public Task<FileFolder> UploadAsync(string userId, string fileName, string? targetFolderPath, Stream stream, CancellationToken cancellationToken = default);
+    public Task<FileFolder> UploadAsync(string userId, string fileName, Guid? targetFolderId, Stream stream, CancellationToken cancellationToken = default);
 
     public Task<FileFolder> GetMetadataAsync(string userId, Guid fileId,
         CancellationToken cancellationToken = default);

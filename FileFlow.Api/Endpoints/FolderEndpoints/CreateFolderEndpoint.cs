@@ -19,7 +19,7 @@ public class CreateFolderEndpoint : IEndpoint
                 var folder = await folderService.CreateAsync(
                     userId,
                     request.FolderName,
-                    request.TargetFolder,
+                    request.TargetFolderId,
                     cancellationToken);
 
                 return Results.CreatedAtRoute(nameof(GetFolderEndpoint), new {id = folder.Id}, folder.ToResponse());
@@ -36,7 +36,7 @@ public class CreateFolderEndpoint : IEndpoint
                 Description = "Creates a new folder in the specified location or at the root level.\n\n" +
                               "### Request Body\n" +
                               "- **FolderName** (string): The name for the new folder\n" +
-                              "- **TargetFolder** (string, optional): The path to the parent folder where the new folder should be created. If null, creates at root level\n\n" +
+                              "- **TargetFolderId** (string, optional): The Id of the parent folder where the new folder should be created. If null, creates at root level\n\n" +
                               "### Behavior\n" +
                               "- Validates that the folder name is valid and doesn't contain illegal characters\n" +
                               "- Creates a new folder with the specified name in the target location\n" +

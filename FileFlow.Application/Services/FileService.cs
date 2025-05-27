@@ -18,22 +18,23 @@ internal class FileService : IFileService
         _fileStorage = fileStorage;
     }
 
-    public async Task<FileFolder> UploadAsync(string userId, string fileName, string? targetFolderPath, Stream stream,
+    public async Task<FileFolder> UploadAsync(string userId, string fileName, Guid? targetFolderId, Stream stream,
         CancellationToken cancellationToken = default)
     {
         try
         {
             Guid? parentId = null;
-            if (targetFolderPath is not null)
+            FileFolder? parent = null;
+            if (targetFolderId is not null)
             {
-                var parent = _dbContext.FileFolders.FirstOrDefault(x =>
-                    x.UserId == userId && x.Path == targetFolderPath);
+                parent = _dbContext.FileFolders.FirstOrDefault(x =>
+                    x.UserId == userId && x.Id == targetFolderId);
                 if (parent is null)
-                    throw new FolderNotFoundException(userId, targetFolderPath);
+                    throw new FolderNotFoundException(userId, targetFolderId.Value);
                 parentId = parent.Id;
             }
 
-            var path = Path.Join(targetFolderPath ?? string.Empty, fileName);
+            var path = Path.Join(parent?.Path ?? string.Empty, fileName);
             if (_dbContext.FileFolders.Any(x => x.UserId == userId && x.Path == path))
             {
                 throw new FileAlreadyExistsException(userId, path);

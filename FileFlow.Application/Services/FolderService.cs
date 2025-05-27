@@ -14,23 +14,24 @@ internal class FolderService : IFolderService
         _dbContext = dbContext;
     }
 
-    public async Task<FileFolder> CreateAsync(string userId, string folderName, string? targetFolder,
+    public async Task<FileFolder> CreateAsync(string userId, string folderName, Guid? targetFolderId,
         CancellationToken cancellationToken = default)
     {
         Guid? parentId = null;
-        if (targetFolder is not null)
+        FileFolder? parent = null;
+        if (targetFolderId is not null)
         {
-            var parent = _dbContext.FileFolders.FirstOrDefault(x =>
+            parent = _dbContext.FileFolders.FirstOrDefault(x =>
                 x.UserId == userId &&
-                x.Path == targetFolder &&
+                x.Id == targetFolderId &&
                 x.Type == FileFolderType.Folder &&
                 !x.IsInTrash
             );
-            if (parent is null) throw new FolderNotFoundException(userId, targetFolder);
+            if (parent is null) throw new FolderNotFoundException(userId, targetFolderId.Value);
             parentId = parent.Id;
         }
 
-        var path = Path.Join(targetFolder ?? string.Empty, folderName);
+        var path = Path.Join(parent?.Path ?? string.Empty, folderName);
         if (_dbContext.FileFolders.Any(x => x.UserId == userId && x.Path == path))
         {
             throw new FolderAlreadyExistsException(userId, path);

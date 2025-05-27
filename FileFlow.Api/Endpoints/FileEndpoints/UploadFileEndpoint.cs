@@ -9,7 +9,7 @@ public class UploadFileForm
 {
     public required IFormFile File { get; set; } = null!;
 
-    public string? TargetFolderPath { get; set; }
+    public Guid? TargetFolderId { get; set; }
 }
 
 public class UploadFileEndpoint : IEndpoint
@@ -21,7 +21,7 @@ public class UploadFileEndpoint : IEndpoint
                     CancellationToken cancellationToken) =>
                 {
                     var uploadedFile = await fileService.UploadAsync(user.GetUserid(), uploadFileForm.File.FileName,
-                        uploadFileForm.TargetFolderPath,
+                        uploadFileForm.TargetFolderId,
                         uploadFileForm.File.OpenReadStream(), cancellationToken);
 
                     return Results.Ok(uploadedFile.ToResponse());
@@ -38,7 +38,7 @@ public class UploadFileEndpoint : IEndpoint
                 Description = "Uploads a new file to the specified folder path.\n\n" +
                               "### Request Form Data\n" +
                               "- **File** (form file): The file to upload\n" +
-                              "- **TargetFolderPath** (string, optiona;): The path to the folder where the file should be uploaded. If not specified, root level will be used\n\n" +
+                              "- **TargetFolderId** (string, optional): The id of the folder where the file should be uploaded. If not specified, root level will be used\n\n" +
                               "### Behavior\n" +
                               "- Validates the uploaded file (size, type, etc.)\n" +
                               "- Checks if the target folder exists and is accessible to the user\n" +
