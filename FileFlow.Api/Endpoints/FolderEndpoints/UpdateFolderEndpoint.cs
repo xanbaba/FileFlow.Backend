@@ -43,7 +43,7 @@ public class UpdateFolderEndpoint : IEndpoint
                               "- Updates folder path and all paths of files and subfolders contained within it\n" +
                               "- If a folder with the same name already exists at the same level, returns a 400 Bad Request error\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or appropriate error status if folder not found or name is invalid."
+                              "Returns 200 Ok if successful, or appropriate error status if folder not found or name is invalid."
             });
     }
 

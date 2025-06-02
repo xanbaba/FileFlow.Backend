@@ -16,11 +16,10 @@ public class DeleteFolderEndpoint : IEndpoint
                 var userId = user.GetUserid();
                 await folderService.MoveToTrashAsync(userId, id, cancellationToken);
                 
-                return Results.NoContent();
+                return Results.Ok();
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)
@@ -35,7 +34,7 @@ public class DeleteFolderEndpoint : IEndpoint
                               "- Folder and its contents remain in the system and can be restored or permanently deleted later\n" +
                               "- Items in trash still count against the user's storage quota\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or 404 Not Found if folder doesn't exist."
+                              "Returns 200 Ok if successful, or 404 Not Found if folder doesn't exist."
             });
     }
 

@@ -12,11 +12,10 @@ public class PermanentDeleteFileEndpoint : IEndpoint
                 {
                     var userId = user.GetUserid();
                     await fileService.DeletePermanentlyAsync(userId, id, cancellationToken);
-                    return Results.NoContent();
+                    return Results.Ok();
                 })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)
@@ -31,7 +30,7 @@ public class PermanentDeleteFileEndpoint : IEndpoint
                               "- This action is irreversible - the file cannot be recovered after permanent deletion\n" +
                               "- The storage space will be freed and reflected in the user's quota\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or 404 Not Found if file doesn't exist."
+                              "Returns 200 Ok if successful, or 404 Not Found if file doesn't exist."
             });
     }
 

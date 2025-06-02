@@ -22,11 +22,11 @@ public class CreateFolderEndpoint : IEndpoint
                     request.TargetFolderId,
                     cancellationToken);
 
-                return Results.CreatedAtRoute(nameof(GetFolderEndpoint), new {id = folder.Id}, folder.ToResponse());
+                return Results.Ok(folder.ToResponse());
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces<FileFolderResponse>(StatusCodes.Status201Created)
+            .Produces<FileFolderResponse>()
             .Produces<ErrorMessage>(StatusCodes.Status400BadRequest)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)

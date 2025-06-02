@@ -12,11 +12,10 @@ public class RestoreFileEndpoint : IEndpoint
             {
                 var userId = user.GetUserid();
                 await fileService.RestoreFromTrashAsync(userId, id, cancellationToken);
-                return Results.NoContent();
+                return Results.Ok();
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)
@@ -31,7 +30,7 @@ public class RestoreFileEndpoint : IEndpoint
                               "- If the file's original parent folder no longer exists or is in trash, the file will be moved to root\n" +
                               "- If a file with the same name exists in the target location, the restored file may be renamed\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or 404 Not Found if file doesn't exist."
+                              "Returns 200 Ok if successful, or 404 Not Found if file doesn't exist."
             });
     }
 

@@ -22,7 +22,6 @@ public class MoveItemEndpoint : IEndpoint
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status200OK)
             .Produces<ErrorMessage>(StatusCodes.Status400BadRequest)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
@@ -42,7 +41,7 @@ public class MoveItemEndpoint : IEndpoint
                               "- Cannot move a folder into itself or any of its subfolders (would create a circular reference)\n" +
                               "- If an item with the same name exists in the destination, may return an error or rename the moved item\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or appropriate error status if the operation fails."
+                              "Returns 200 Ok if successful, or appropriate error status if the operation fails."
             });
     }
 

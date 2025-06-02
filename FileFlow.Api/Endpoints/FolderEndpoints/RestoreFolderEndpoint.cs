@@ -22,7 +22,7 @@ public class RestoreFolderEndpoint : IEndpoint
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces<FileFolderResponse>(StatusCodes.Status200OK)
+            .Produces<FileFolderResponse>()
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)
@@ -37,7 +37,7 @@ public class RestoreFolderEndpoint : IEndpoint
                               "- If the folder's original parent folder no longer exists or is in trash, the folder will be moved to root\n" +
                               "- If a folder with the same name exists in the target location, the restored folder may be renamed\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or 404 Not Found if folder doesn't exist."
+                              "Returns 200 Ok if successful, or 404 Not Found if folder doesn't exist."
             });
     }
 

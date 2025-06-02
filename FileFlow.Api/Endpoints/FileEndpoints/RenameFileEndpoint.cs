@@ -13,10 +13,10 @@ public class RenameFileEndpoint : IEndpoint
                 {
                     var userId = user.GetUserid();
                     await fileService.RenameAsync(userId, id, request.NewName, cancellationToken);
+                    return Results.Ok();
                 })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status400BadRequest)
@@ -36,7 +36,7 @@ public class RenameFileEndpoint : IEndpoint
                               "- Cannot rename files that are in trash\n" +
                               "- If a file with the same name already exists in the same folder, returns a 400 Bad Request error\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful.\n" +
+                              "Returns 200 Ok if successful.\n" +
                               "Returns 404 Not Found if the file doesn't exist.\n" +
                               "Returns 400 Bad Request if the new filename is invalid or already exists in the same location."
             });

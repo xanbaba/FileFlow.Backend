@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FileFlow.Application.Services.Abstractions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FileFlow.Api.Endpoints.FileEndpoints;
 
@@ -18,7 +19,7 @@ public class DownloadFileEndpoint : IEndpoint
                 })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
+            .Produces<FileStreamResult>(contentType: "application/octet-stream")
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)

@@ -16,11 +16,10 @@ public class PermanentDeleteFolderEndpoint : IEndpoint
                 var userId = user.GetUserid();
                 await folderService.DeletePermanentlyAsync(userId, id, cancellationToken);
                 
-                return Results.NoContent();
+                return Results.Ok();
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status204NoContent)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)
@@ -35,7 +34,7 @@ public class PermanentDeleteFolderEndpoint : IEndpoint
                               "- This action is irreversible - none of the deleted items can be recovered after permanent deletion\n" +
                               "- The storage space will be freed and reflected in the user's quota\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or 404 Not Found if folder doesn't exist."
+                              "Returns 200 Ok if successful, or 404 Not Found if folder doesn't exist."
             });
     }
 

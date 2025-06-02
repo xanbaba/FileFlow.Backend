@@ -17,8 +17,12 @@ public class SendSupportMessageEndpoint : IEndpoint
             .WithName(Name)
             .RequireAuthorization()
             .Produces(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .WithOpenApi(operation => new(operation)
+            {
+                Summary = "Send a support message",
+                Description = "Sends a support message from the authenticated user to the support team"
+            });
     }
 
     public string Name => nameof(SendSupportMessageEndpoint);
