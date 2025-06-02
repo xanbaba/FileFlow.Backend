@@ -43,7 +43,7 @@ internal class FolderService : IFolderService
         var folder = new FileFolder
         {
             Id = Guid.NewGuid(),
-            IsStarred = parent?.IsStarred ?? false,
+            IsStarred = false,
             IsInTrash = false,
             UserId = userId,
             Name = folderName,
