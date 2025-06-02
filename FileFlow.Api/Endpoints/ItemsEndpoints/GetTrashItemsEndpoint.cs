@@ -15,7 +15,7 @@ public class GetTrashItemsEndpoint : IEndpoint
             {
                 var userId = user.GetUserid();
                 var items = await itemService.GetInTrashAsync(userId, cancellationToken);
-                
+
                 return Results.Ok(items.Select(item => item.ToResponse()));
             })
             .WithName(Name)
@@ -25,14 +25,14 @@ public class GetTrashItemsEndpoint : IEndpoint
             .WithOpenApi(op => new(op)
             {
                 Summary = "Retrieves items in trash",
-                Description = "Returns a list of all files and folders that are currently in the user's trash.\n\n" +
-                              "### Behavior\n" +
-                              "- Returns only items that belong to the authenticated user\n" +
-                              "- Returns both files and folders that have IsInTrash=true\n" +
-                              "- Results are typically sorted by the date they were moved to trash\n" +
-                              "- May include information about when items will be automatically permanently deleted\n\n" +
-                              "### Response\n" +
-                              "Returns an array of FileFolderResponse objects containing metadata about each trashed item."
+                Description =
+                    "Returns a list of top-level files and folders that are currently in the user's trash.\n\n" +
+                    "### Behavior\n" +
+                    "- Returns only items that belong to the authenticated user\n" +
+                    "- Returns both files and folders that have IsInTrash=true\n" +
+                    "- Returns only top-level files and folders. A file or folder is considered a top-level one when it is located in root directory, or its parent is not in trash\n\n" +
+                    "### Response\n" +
+                    "Returns an array of FileFolderResponse objects containing metadata about each trashed item."
             });
     }
 

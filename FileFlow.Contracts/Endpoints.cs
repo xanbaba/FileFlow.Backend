@@ -59,6 +59,8 @@ public static class Endpoints
         
         // Methods
         public const string EmptyTrash = $"{Base}/empty";
+        
+        public const string RestoreTrash = $"{Base}/restore";
     }
 
     public static class SupportEndpoints

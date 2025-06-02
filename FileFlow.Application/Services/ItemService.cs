@@ -45,7 +45,7 @@ internal class ItemService : IItemService
     public Task<IEnumerable<FileFolder>> GetInTrashAsync(string userId, CancellationToken cancellationToken = default)
     {
         var items = _dbContext.FileFolders
-            .Where(x => x.UserId == userId && x.IsInTrash)
+            .Where(x => x.UserId == userId && x.IsInTrash && (x.Parent == null || !x.Parent.IsInTrash))
             .ToList();
         
         return Task.FromResult<IEnumerable<FileFolder>>(items);
@@ -136,6 +136,16 @@ internal class ItemService : IItemService
             }
         }
         
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RestoreTrash(string userId, CancellationToken cancellationToken = default)
+    {
+        var trashItems = _dbContext.FileFolders.Where(x => x.UserId == userId && x.IsInTrash);
+        foreach (var item in trashItems)
+        {
+            item.IsInTrash = false;
+        }
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }
