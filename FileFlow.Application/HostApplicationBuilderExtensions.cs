@@ -6,6 +6,7 @@ using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Utilities.Auth0Utility;
 using FileFlow.Application.Utilities.EmailUtility;
 using FileFlow.Application.Utilities.FileStorageUtility;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,12 +23,12 @@ public static class HostApplicationBuilderExtensions
         builder.Services.Configure<Auth0Options>(
             builder.Configuration.GetSection("Auth0"));
         
-        builder.Services.Configure<EmailSettings>(
-            builder.Configuration.GetSection("EmailSettings"));
+        builder.Services.Configure<MailjetSettings>(
+            builder.Configuration.GetSection("MailjetSettings"));
         
         builder.Services.AddHttpClient("Auth0Client", client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["Auth0:Domain"]!);
+            client.BaseAddress = new Uri($"https://{builder.Configuration["Auth0:Domain"]!}");
         });
 
         builder.Services.AddScoped<IEventBus, EventBus>();
@@ -39,13 +40,13 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<ISupportEmail, SupportEmail>();
         builder.Services.AddSingleton<IAuth0AccessTokenProvider, Auth0AccessTokenProvider>();
         builder.Services.AddScoped<IUserUtility, UserUtility>();
+        builder.Services.AddScoped<IUserStorageService, UserStorageService>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }
 
-    public static void UseApplication(this IHost app)
+    public static void UseApplication(this IApplicationBuilder app)
     {
-        using var serviceScope = app.Services.CreateScope();
-
+        using var serviceScope = app.ApplicationServices.CreateScope();
         var appDbContext = serviceScope.ServiceProvider.GetRequiredService<AppDbContext>();
         appDbContext.Database.Migrate();
     }

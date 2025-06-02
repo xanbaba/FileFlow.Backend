@@ -30,14 +30,14 @@ internal class UserUtility : IUserUtility
         }
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        var deserializedContent = JsonSerializer.Deserialize<dynamic>(content);
-        return deserializedContent!.email;
+        var deserializedContent = JsonSerializer.Deserialize<JsonElement>(content);
+        return deserializedContent.GetProperty("email").GetString();
     }
 
     private async Task<HttpResponseMessage> GetUserEmailAsync(string userId, string accessToken, CancellationToken cancellationToken = default)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v2/users/{userId}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Add("Authorization", $"Bearer {accessToken}");
         request.Headers.Add("Accept", "application/json");
         var response = await _httpClient.SendAsync(request, cancellationToken);
         return response;

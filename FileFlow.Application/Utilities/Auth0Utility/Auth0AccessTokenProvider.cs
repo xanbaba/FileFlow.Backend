@@ -35,7 +35,7 @@ internal class Auth0AccessTokenProvider : IAuth0AccessTokenProvider
         {
             client_id = _options.Value.ClientId,
             client_secret = _options.Value.ClientSecret,
-            audience = _options.Value.Audience,
+            audience = $"https://{_options.Value.Domain}/api/v2/",
             grant_type = "client_credentials"
         };
 
@@ -48,10 +48,10 @@ internal class Auth0AccessTokenProvider : IAuth0AccessTokenProvider
         var response = await _client.PostAsync("/oauth/token", jsonContent);
         response.EnsureSuccessStatusCode();
         var responseContent = await response.Content.ReadAsStringAsync();
-        var responseContentDeserialized = JsonSerializer.Deserialize<dynamic>(responseContent)!;
+        var responseContentDeserialized = JsonSerializer.Deserialize<JsonElement>(responseContent)!;
         lock (_accessTokenLock)
         {
-            _accessToken = responseContentDeserialized.access_token;
+            _accessToken = responseContentDeserialized.GetProperty("access_token").GetString();
         }
     }
 }
