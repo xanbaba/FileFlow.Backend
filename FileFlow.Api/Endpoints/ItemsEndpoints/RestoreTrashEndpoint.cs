@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using FileFlow.Application.Services.Abstractions;
+
 namespace FileFlow.Api.Endpoints.ItemsEndpoints;
 
 public class RestoreTrashEndpoint : IEndpoint
@@ -5,9 +8,10 @@ public class RestoreTrashEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder builder)
     {
         builder.MapPost(Contracts.Endpoints.TrashEndpoints.RestoreTrash,
-            async () =>
+            async (IItemService itemService, ClaimsPrincipal user, CancellationToken cancellationToken) =>
             {
-
+                await itemService.RestoreTrash(user.GetUserid(), cancellationToken);
+                return Results.Ok();
             })
             .WithName(Name)
             .RequireAuthorization()
