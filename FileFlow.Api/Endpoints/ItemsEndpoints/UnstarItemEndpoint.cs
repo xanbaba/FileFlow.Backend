@@ -20,7 +20,6 @@ public class UnstarItemEndpoint : IEndpoint
             })
             .WithName(Name)
             .RequireAuthorization()
-            .Produces(StatusCodes.Status200OK)
             .Produces<ErrorMessage>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)
             .WithOpenApi(op => new(op)
@@ -35,7 +34,7 @@ public class UnstarItemEndpoint : IEndpoint
                               "- Works on both files and folders\n" +
                               "- Can unstar items even if they are in trash\n\n" +
                               "### Response\n" +
-                              "Returns 204 No Content if successful, or 404 Not Found if the item doesn't exist."
+                              "Returns 200 Ok if successful, or 404 Not Found if the item doesn't exist."
             });
     }
 
