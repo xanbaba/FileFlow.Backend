@@ -13,7 +13,8 @@ internal class FileFolderEntityConfiguration : IEntityTypeConfiguration<FileFold
         // Indices
         builder.HasIndex(x => x.Name);
 
-        builder.HasIndex(x => x.Path);
+        builder.HasIndex(x => x.Path)
+            .IsUnique();
 
         builder.HasIndex(x => x.ParentId);
 
@@ -42,5 +43,10 @@ internal class FileFolderEntityConfiguration : IEntityTypeConfiguration<FileFold
         builder.Property(x => x.FileCategory)
             .HasConversion<string>()
             .HasMaxLength(255);
+        
+        builder.HasOne(f => f.Parent)
+            .WithMany()
+            .HasForeignKey(f => f.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

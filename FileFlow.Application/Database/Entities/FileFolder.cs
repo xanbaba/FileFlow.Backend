@@ -48,6 +48,8 @@ public class FileFolder
     /// Gets or sets the unique identifier of the parent folder. Null if the item is in the root directory.
     /// </summary>
     public Guid? ParentId { get; set; } // ID of parent folder, null if in root
+    
+    public FileFolder? Parent { get; set; }
 
     /// <summary>
     /// Gets or sets the full path to the file or folder within the user's storage.
