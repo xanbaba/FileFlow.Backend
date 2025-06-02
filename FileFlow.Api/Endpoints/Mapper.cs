@@ -13,4 +13,16 @@ public static class Mapper
         IsStarred = fileFolder.IsStarred,
         Path = fileFolder.Path
     };
+
+    public static UserStorageResponse ToResponse(this UserStorage userStorage) =>
+        new()
+        {
+            Id = userStorage.Id,
+            Documents = userStorage.Documents,
+            Images = userStorage.Images,
+            MaxSpace = userStorage.MaxSpace,
+            Other = userStorage.Other,
+            Videos = userStorage.Videos,
+            UsedSpace = userStorage.UsedSpace
+        };
 }

@@ -17,6 +17,6 @@ public interface IUserStorageService
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public Task<UserStorage> GetAsync(string userId, CancellationToken cancellationToken = default);
+    /// <returns>UserStorage associated with the given user. Null if not found</returns>
+    public Task<UserStorage?> GetAsync(string userId, CancellationToken cancellationToken = default);
 }

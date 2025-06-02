@@ -64,6 +64,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+
 app.UseApplication();
 
 app.UseHttpsRedirection();
@@ -72,6 +73,8 @@ app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<UserStorageMiddleware>();
 
 app.MapEndpoints();
 

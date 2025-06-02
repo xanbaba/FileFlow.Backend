@@ -1,5 +1,7 @@
 using FileFlow.Application.Database;
 using FileFlow.Application.Database.Entities;
+using FileFlow.Application.MessageBus;
+using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
 
@@ -8,10 +10,12 @@ namespace FileFlow.Application.Services;
 internal class ItemService : IItemService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IEventBus _eventBus;
 
-    public ItemService(AppDbContext dbContext)
+    public ItemService(AppDbContext dbContext, IEventBus eventBus)
     {
         _dbContext = dbContext;
+        _eventBus = eventBus;
     }
 
     public Task<IEnumerable<FileFolder>> GetStarredAsync(string userId, CancellationToken cancellationToken = default)
@@ -76,6 +80,15 @@ internal class ItemService : IItemService
         var trashItems = _dbContext.FileFolders
             .Where(x => x.UserId == userId && x.IsInTrash)
             .ToList();
+        foreach (var folder in trashItems.Where(x => x.Type == FileFolderType.Folder))
+        {
+            var descendants = _dbContext.FileFolders.Where(x => x.UserId == userId && x.Path.StartsWith(folder.Path + "/"));
+            _dbContext.FileFolders.RemoveRange(descendants);
+            foreach (var file in descendants.Where(x => x.Type == FileFolderType.File))
+            {
+                await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
+            }
+        }
 
         _dbContext.FileFolders.RemoveRange(trashItems);
         await _dbContext.SaveChangesAsync(cancellationToken);

@@ -1,5 +1,7 @@
 using FileFlow.Application.Database;
 using FileFlow.Application.Database.Entities;
+using FileFlow.Application.MessageBus;
+using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
 
@@ -8,10 +10,12 @@ namespace FileFlow.Application.Services;
 internal class FolderService : IFolderService
 {
     private readonly AppDbContext _dbContext;
+    private IEventBus _eventBus;
 
-    public FolderService(AppDbContext dbContext)
+    public FolderService(AppDbContext dbContext, IEventBus eventBus)
     {
         _dbContext = dbContext;
+        _eventBus = eventBus;
     }
 
     public async Task<FileFolder> CreateAsync(string userId, string folderName, Guid? targetFolderId,
@@ -39,7 +43,7 @@ internal class FolderService : IFolderService
         var folder = new FileFolder
         {
             Id = Guid.NewGuid(),
-            IsStarred = false,
+            IsStarred = parent?.IsStarred ?? false,
             IsInTrash = false,
             UserId = userId,
             Name = folderName,
@@ -78,7 +82,7 @@ internal class FolderService : IFolderService
             throw new FolderNotFoundException(userId, folderId.Value);
         }
 
-        var children = _dbContext.FileFolders.Where(x => x.UserId == userId && x.ParentId == folderId).ToList();
+        var children = _dbContext.FileFolders.Where(x => x.UserId == userId && x.ParentId == folderId && !x.IsInTrash).ToList();
         return Task.FromResult<IEnumerable<FileFolder>>(children);
     }
 
@@ -152,6 +156,11 @@ internal class FolderService : IFolderService
 
         // Remove all descendants first
         _dbContext.FileFolders.RemoveRange(descendants);
+        foreach (var file in descendants.Where(x => x.Type == FileFolderType.File))
+        {
+            // Publish event for each deleted file
+            await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
+        }
 
         // Then remove the folder itself
         _dbContext.FileFolders.Remove(folder);

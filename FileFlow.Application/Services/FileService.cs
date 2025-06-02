@@ -1,5 +1,7 @@
 using FileFlow.Application.Database;
 using FileFlow.Application.Database.Entities;
+using FileFlow.Application.MessageBus;
+using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
 using FileFlow.Application.Utilities.FileStorageUtility;
@@ -11,11 +13,13 @@ internal class FileService : IFileService
 {
     private readonly AppDbContext _dbContext;
     private readonly IFileStorage _fileStorage;
+    private readonly IEventBus _eventBus;
 
-    public FileService(AppDbContext dbContext, IFileStorage fileStorage)
+    public FileService(AppDbContext dbContext, IFileStorage fileStorage, IEventBus eventBus)
     {
         _dbContext = dbContext;
         _fileStorage = fileStorage;
+        _eventBus = eventBus;
     }
 
     public async Task<FileFolder> UploadAsync(string userId, string fileName, Guid? targetFolderId, Stream stream,
@@ -60,8 +64,12 @@ internal class FileService : IFileService
             _dbContext.FileFolders.Add(file);
             await _fileStorage.UploadFileAsync(file.Id, stream);
 
+            // Save changes
             await _dbContext.SaveChangesAsync(cancellationToken);
             await _fileStorage.CommitAsync();
+            
+            // Publish the event
+            await _eventBus.PublishAsync(new FileUploadedEvent(file), cancellationToken);
             return file;
         }
         catch (Exception)
@@ -109,12 +117,15 @@ internal class FileService : IFileService
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task DeletePermanentlyAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
+    public async Task DeletePermanentlyAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
     {
         var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
         if (file is null) throw new FileNotFoundException(userId, fileId);
         _dbContext.FileFolders.Remove(file);
-        return _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        
+        // Publish the event
+        await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
     }
 
     public async Task RestoreFromTrashAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
