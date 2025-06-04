@@ -18,7 +18,7 @@ public class UpdateFolderEndpoint : IEndpoint
             {
                 var userId = user.GetUserid();
                 await folderService.RenameAsync(userId, id, request.NewFolderName, cancellationToken);
-                var updatedFolder = await folderService.GetMetadataAsync(userId, id, cancellationToken);
+                var updatedFolder = await folderService.GetMetadataAsync(userId, id.ToString(), cancellationToken);
                 
                 return Results.Ok(updatedFolder.ToResponse());
             })

@@ -32,7 +32,7 @@ public static class Endpoints
         
         // Methods
         public const string CreateFolder = Base;
-        public const string GetFolder = $"{Base}/{{id:guid}}";
+        public const string GetFolder = $"{Base}/{{id}}";
         public const string GetChildren = $"{Base}/{{id}}/children";
         public const string UpdateFolder = $"{Base}/{{id:guid}}";
         public const string DeleteFolder = $"{Base}/{{id:guid}}";

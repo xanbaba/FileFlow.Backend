@@ -9,13 +9,13 @@ public class GetFolderEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder builder)
     {
         builder.MapGet(Contracts.Endpoints.FolderEndpoints.GetFolder, async (
-                Guid id,
+                string idOrPath,
                 IFolderService folderService,
                 ClaimsPrincipal user,
                 CancellationToken cancellationToken) =>
             {
                 var userId = user.GetUserid();
-                var folder = await folderService.GetMetadataAsync(userId, id, cancellationToken);
+                var folder = await folderService.GetMetadataAsync(userId, idOrPath, cancellationToken);
                 return Results.Ok(folder.ToResponse());
             })
             .WithName(Name)
@@ -28,7 +28,7 @@ public class GetFolderEndpoint : IEndpoint
                 Summary = "Retrieves metadata for a specific folder",
                 Description = "Retrieves detailed metadata for a specified folder.\n\n" +
                               "### Route Parameters\n" +
-                              "- **id** (Guid): The unique identifier of the folder to retrieve.\n\n" +
+                              "- **idOrPath** (string): The unique identifier or the path of the folder to retrieve.\n\n" +
                               "### Behavior\n" +
                               "- Returns metadata for the specified folder if it belongs to the authenticated user\n" +
                               "- Will return folder metadata even if the folder is in trash\n\n" +

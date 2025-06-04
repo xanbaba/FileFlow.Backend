@@ -59,14 +59,21 @@ internal class FolderService : IFolderService
         return folder;
     }
 
-    public Task<FileFolder> GetMetadataAsync(string userId, Guid folderId,
+    public Task<FileFolder> GetMetadataAsync(string userId, string idOrPath,
         CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
-            x.UserId == userId &&
-            x.Id == folderId &&
-            x.Type == FileFolderType.Folder
-        );
+        var folder = Guid.TryParse(idOrPath, out var folderId)
+            ? _dbContext.FileFolders.FirstOrDefault(x =>
+                x.UserId == userId &&
+                x.Id == folderId &&
+                x.Type == FileFolderType.Folder
+            )
+            : _dbContext.FileFolders.FirstOrDefault(x =>
+                x.UserId == userId &&
+                x.Path == idOrPath &&
+                x.Type == FileFolderType.Folder
+            );
+
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
         return Task.FromResult(folder);
     }

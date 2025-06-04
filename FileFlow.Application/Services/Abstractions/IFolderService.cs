@@ -7,7 +7,7 @@ public interface IFolderService
     public Task<FileFolder> CreateAsync(string userId, string folderName, Guid? targetFolderId,
         CancellationToken cancellationToken = default);
 
-    public Task<FileFolder> GetMetadataAsync(string userId, Guid folderId,
+    public Task<FileFolder> GetMetadataAsync(string userId, string idOrPath,
         CancellationToken cancellationToken = default);
 
     public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid? folderId,
