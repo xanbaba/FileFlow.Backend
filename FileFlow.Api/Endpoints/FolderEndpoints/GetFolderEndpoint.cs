@@ -15,6 +15,7 @@ public class GetFolderEndpoint : IEndpoint
                 CancellationToken cancellationToken) =>
             {
                 var userId = user.GetUserid();
+                idOrPath = Uri.UnescapeDataString(idOrPath);
                 var folder = await folderService.GetMetadataAsync(userId, idOrPath, cancellationToken);
                 return Results.Ok(folder.ToResponse());
             })
