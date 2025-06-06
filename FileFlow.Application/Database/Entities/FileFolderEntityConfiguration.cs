@@ -26,6 +26,8 @@ internal class FileFolderEntityConfiguration : IEntityTypeConfiguration<FileFold
 
         builder.HasIndex(x => x.IsInTrash);
         
+        builder.HasIndex(x => x.LastAccessed);
+        
         // Properties
         builder.Property(x => x.UserId)
             .HasMaxLength(255);

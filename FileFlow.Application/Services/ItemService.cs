@@ -29,15 +29,8 @@ internal class ItemService : IItemService
 
     public Task<IEnumerable<FileFolder>> GetRecentAsync(string userId, CancellationToken cancellationToken = default)
     {
-        // TODO: Add LastAccessed field
-        
-        // Assuming we want the most recently created/modified items
-        // You might need to adjust this query if you have a specific LastAccessed field
         var items = _dbContext.FileFolders
-            .Where(x => x.UserId == userId && !x.IsInTrash)
-            .OrderByDescending(x => x.Id) // Using Id as a proxy for creation time assuming it uses Guid.NewGuid()
-            .Take(20) // Limit to recent 20 items
-            .ToList();
+            .Where(x => x.LastAccessed.HasValue && x.LastAccessed.Value >= DateTime.UtcNow.AddDays(-1));
         
         return Task.FromResult<IEnumerable<FileFolder>>(items);
     }

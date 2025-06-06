@@ -70,4 +70,6 @@ public class FileFolder
     /// Gets or sets a value indicating whether the file or folder is currently in the trash.
     /// </summary>
     public bool IsInTrash { get; set; }
+    
+    public DateTime? LastAccessed { get; set; }
 }
