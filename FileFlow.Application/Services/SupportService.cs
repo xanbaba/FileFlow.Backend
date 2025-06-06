@@ -2,6 +2,8 @@ using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
 using FileFlow.Application.Utilities.Auth0Utility;
 using FileFlow.Application.Utilities.EmailUtility;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace FileFlow.Application.Services;
 
@@ -25,7 +27,14 @@ internal class SupportService : ISupportService
             throw new UserNotFoundException(userId);
         }
 
-        // ToDo: Validate subject and message before sending email
+        if (subject.Length == 0)
+        {
+            throw new ValidationException([new ValidationFailure(nameof(subject), "Subject cannot be empty")]);
+        }
+        if (message.Length == 0)
+        {
+            throw new ValidationException([new ValidationFailure(nameof(message), "Message cannot be empty")]);
+        }
         await _supportEmail.SendContactSupportMessageAsync(userEmail, subject, message, cancellationToken);
     }
 }

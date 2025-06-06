@@ -5,6 +5,8 @@ using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
 using FileFlow.Application.Utilities.FileStorageUtility;
+using FluentValidation;
+using FluentValidation.Results;
 using FileNotFoundException = FileFlow.Application.Services.Exceptions.FileNotFoundException;
 
 namespace FileFlow.Application.Services;
@@ -43,13 +45,17 @@ internal class FileService : IFileService
             {
                 throw new FileAlreadyExistsException(userId, path);
             }
+
+            if (!ValidateFileName(fileName))
+            {
+                throw new ValidationException([new ValidationFailure(nameof(fileName), "Invalid file name")]);
+            }
             var file = new FileFolder
             {
                 Id = Guid.CreateVersion7(),
                 IsStarred = false,
                 IsInTrash = false,
                 UserId = userId,
-                // ToDo: Validate file name before uploading
                 Name = fileName,
                 Path = path,
                 Size = (int)(stream.Length / (1024.0 * 1024.0)),
@@ -79,6 +85,12 @@ internal class FileService : IFileService
         }
     }
 
+    private bool ValidateFileName(string fileName)
+    {
+        var invalidFileNameChars = Path.GetInvalidFileNameChars();
+        return invalidFileNameChars.Any(fileName.Contains);
+    }
+
     public Task<FileFolder> GetMetadataAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
     {
         var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
@@ -100,7 +112,10 @@ internal class FileService : IFileService
         var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
         if (file is null) throw new FileNotFoundException(userId, fileId);
 
-        // ToDo: Validate new name before renaming
+        if (!ValidateFileName(newFileName))
+        {
+            throw new ValidationException([new ValidationFailure(nameof(newFileName), "Invalid file name")]);
+        }
         file.Name = newFileName;
 
         file.Path = string.Join('/', file.Path.Split('/').SkipLast(1), newFileName);
