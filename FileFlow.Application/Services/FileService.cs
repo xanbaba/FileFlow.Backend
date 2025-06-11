@@ -40,7 +40,7 @@ internal class FileService : IFileService
                 parentId = parent.Id;
             }
 
-            var path = Path.Join(parent?.Path ?? string.Empty, fileName);
+            var path = Path.Join(parent?.Path ?? "/", fileName);
             if (_dbContext.FileFolders.Any(x => x.UserId == userId && x.Path == path))
             {
                 throw new FileAlreadyExistsException(userId, path);
@@ -85,10 +85,10 @@ internal class FileService : IFileService
         }
     }
 
-    private bool ValidateFileName(string fileName)
+    private static bool ValidateFileName(string fileName)
     {
         var invalidFileNameChars = Path.GetInvalidFileNameChars();
-        return invalidFileNameChars.Any(fileName.Contains);
+        return !invalidFileNameChars.Any(fileName.Contains);
     }
 
     public Task<FileFolder> GetMetadataAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
