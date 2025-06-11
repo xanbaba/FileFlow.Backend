@@ -28,6 +28,7 @@ public class UploadFileEndpoint : IEndpoint
                 })
             .WithName(Name)
             .RequireAuthorization()
+            .DisableAntiforgery()
             .Produces<FileFolderResponse>()
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status400BadRequest)
