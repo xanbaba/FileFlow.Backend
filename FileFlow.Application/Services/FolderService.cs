@@ -40,6 +40,7 @@ internal class FolderService : IFolderService
         {
             throw new FolderAlreadyExistsException(userId, path);
         }
+
         var folder = new FileFolder
         {
             Id = Guid.NewGuid(),
@@ -56,10 +57,11 @@ internal class FolderService : IFolderService
 
         _dbContext.FileFolders.Add(folder);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await _eventBus.PublishAsync(new FileFolderAccessed(folder), cancellationToken);
         return folder;
     }
 
-    public Task<FileFolder> GetMetadataAsync(string userId, string idOrPath,
+    public async Task<FileFolder> GetMetadataAsync(string userId, string idOrPath,
         CancellationToken cancellationToken = default)
     {
         var folder = Guid.TryParse(idOrPath, out var folderId)
@@ -75,25 +77,34 @@ internal class FolderService : IFolderService
             );
 
         if (folder is null) throw new FolderNotFoundException(userId, folderId);
-        return Task.FromResult(folder);
+        await _eventBus.PublishAsync(new FileFolderAccessed(folder), cancellationToken);
+        return folder;
     }
 
-    public Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid? folderId,
+    public async Task<IEnumerable<FileFolder>> GetChildrenAsync(string userId, Guid? folderId,
         CancellationToken cancellationToken = default)
     {
-        if (folderId is not null && !_dbContext.FileFolders.Any(x => x.UserId == userId &&
-                                                                     x.Id == folderId &&
-                                                                     x.Type == FileFolderType.Folder &&
-                                                                     !x.IsInTrash))
+        var folder = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId &&
+                                                                x.Id == folderId &&
+                                                                x.Type == FileFolderType.Folder &&
+                                                                !x.IsInTrash);
+        if (folderId is not null && folder is null)
         {
             throw new FolderNotFoundException(userId, folderId.Value);
         }
 
-        var children = _dbContext.FileFolders.Where(x => x.UserId == userId && x.ParentId == folderId && !x.IsInTrash).ToList();
-        return Task.FromResult<IEnumerable<FileFolder>>(children);
+        var children = _dbContext.FileFolders.Where(x => x.UserId == userId && x.ParentId == folderId && !x.IsInTrash)
+            .ToList();
+
+        if (folderId is not null)
+        {
+            await _eventBus.PublishAsync(new FileFolderAccessed(folder!), cancellationToken);
+        }
+
+        return children;
     }
 
-    public async Task RenameAsync(string userId, Guid folderId, string newFolderName,
+    public async Task<FileFolder> RenameAsync(string userId, Guid folderId, string newFolderName,
         CancellationToken cancellationToken = default)
     {
         var folder = _dbContext.FileFolders.FirstOrDefault(x =>
@@ -122,6 +133,9 @@ internal class FolderService : IFolderService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await _eventBus.PublishAsync(new FileFolderAccessed(folder), cancellationToken);
+        await _eventBus.PublishAsync(new FileFolderAccessed(folder), cancellationToken);
+        return folder;
     }
 
     public async Task MoveToTrashAsync(string userId, Guid folderId, CancellationToken cancellationToken = default)
@@ -175,7 +189,8 @@ internal class FolderService : IFolderService
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RestoreFromTrashAsync(string userId, Guid folderId, CancellationToken cancellationToken = default)
+    public async Task<FileFolder> RestoreFromTrashAsync(string userId, Guid folderId,
+        CancellationToken cancellationToken = default)
     {
         var folder = _dbContext.FileFolders.FirstOrDefault(x =>
             x.UserId == userId &&
@@ -196,5 +211,6 @@ internal class FolderService : IFolderService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        return folder;
     }
 }

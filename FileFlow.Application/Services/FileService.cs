@@ -50,6 +50,7 @@ internal class FileService : IFileService
             {
                 throw new ValidationException([new ValidationFailure(nameof(fileName), "Invalid file name")]);
             }
+
             var file = new FileFolder
             {
                 Id = Guid.CreateVersion7(),
@@ -73,9 +74,10 @@ internal class FileService : IFileService
             // Save changes
             await _dbContext.SaveChangesAsync(cancellationToken);
             await _fileStorage.CommitAsync();
-            
-            // Publish the event
+
+            // Publish events
             await _eventBus.PublishAsync(new FileUploadedEvent(file), cancellationToken);
+            await _eventBus.PublishAsync(new FileFolderAccessed(file), cancellationToken);
             return file;
         }
         catch (Exception)
@@ -91,19 +93,24 @@ internal class FileService : IFileService
         return !invalidFileNameChars.Any(fileName.Contains);
     }
 
-    public Task<FileFolder> GetMetadataAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
+    public async Task<FileFolder> GetMetadataAsync(string userId, Guid fileId,
+        CancellationToken cancellationToken = default)
     {
         var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
         if (file is null) throw new FileNotFoundException(userId, fileId);
-        return Task.FromResult(file);
+        await _eventBus.PublishAsync(new FileFolderAccessed(file), cancellationToken);
+        return file;
     }
 
-    public Task<Stream> GetContentAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
+    public async Task<(FileFolder file, Stream stream)> GetContentAsync(string userId, Guid fileId,
+        CancellationToken cancellationToken = default)
     {
-        var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
+        var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId && !x.IsInTrash);
         if (file is null) throw new FileNotFoundException(userId, fileId);
 
-        return _fileStorage.DownloadFileAsync(fileId);
+        var fileDownload = await _fileStorage.DownloadFileAsync(fileId);
+        await _eventBus.PublishAsync(new FileFolderAccessed(file), cancellationToken);
+        return (file, fileDownload);
     }
 
     public async Task RenameAsync(string userId, Guid fileId, string newFileName,
@@ -116,11 +123,13 @@ internal class FileService : IFileService
         {
             throw new ValidationException([new ValidationFailure(nameof(newFileName), "Invalid file name")]);
         }
+
         file.Name = newFileName;
 
         file.Path = string.Join('/', file.Path.Split('/').SkipLast(1), newFileName);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await _eventBus.PublishAsync(new FileFolderAccessed(file), cancellationToken);
     }
 
     public async Task MoveToTrashAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
@@ -138,7 +147,7 @@ internal class FileService : IFileService
         if (file is null) throw new FileNotFoundException(userId, fileId);
         _dbContext.FileFolders.Remove(file);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         // Publish the event
         await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
     }

@@ -7,7 +7,7 @@ using FileFlow.Application.Services.Exceptions;
 
 namespace FileFlow.Application.Services;
 
-internal class ItemService : IItemService
+internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>
 {
     private readonly AppDbContext _dbContext;
     private readonly IEventBus _eventBus;
@@ -139,6 +139,13 @@ internal class ItemService : IItemService
         {
             item.IsInTrash = false;
         }
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task Handle(FileFolderAccessed notification, CancellationToken cancellationToken)
+    {
+        var fileFolder = _dbContext.FileFolders.First(x => x.Id == notification.FileFolder.Id);
+        fileFolder.LastAccessed = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

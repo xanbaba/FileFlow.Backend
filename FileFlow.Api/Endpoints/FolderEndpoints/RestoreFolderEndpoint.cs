@@ -15,9 +15,7 @@ public class RestoreFolderEndpoint : IEndpoint
                 CancellationToken cancellationToken) =>
             {
                 var userId = user.GetUserid();
-                await folderService.RestoreFromTrashAsync(userId, id, cancellationToken);
-                var restoredFolder = await folderService.GetMetadataAsync(userId, id.ToString(), cancellationToken);
-                
+                var restoredFolder = await folderService.RestoreFromTrashAsync(userId, id, cancellationToken);
                 return Results.Ok(restoredFolder.ToResponse());
             })
             .WithName(Name)

@@ -9,7 +9,7 @@ public interface IFileService
     public Task<FileFolder> GetMetadataAsync(string userId, Guid fileId,
         CancellationToken cancellationToken = default);
 
-    public Task<Stream> GetContentAsync(string userId, Guid fileId, CancellationToken cancellationToken = default);
+    public Task<(FileFolder file, Stream stream)> GetContentAsync(string userId, Guid fileId, CancellationToken cancellationToken = default);
 
     public Task RenameAsync(string userId, Guid fileId, string newFileName,
         CancellationToken cancellationToken = default);
