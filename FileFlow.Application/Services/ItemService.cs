@@ -4,18 +4,21 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
+using FileFlow.Application.Utilities.FileStorageUtility;
 
 namespace FileFlow.Application.Services;
 
-internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>
+internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>, IEventHandler<FilePermanentlyDeletedEvent>
 {
     private readonly AppDbContext _dbContext;
     private readonly IEventBus _eventBus;
+    private readonly IFileStorage _fileStorage;
 
-    public ItemService(AppDbContext dbContext, IEventBus eventBus)
+    public ItemService(AppDbContext dbContext, IEventBus eventBus, IFileStorage fileStorage)
     {
         _dbContext = dbContext;
         _eventBus = eventBus;
+        _fileStorage = fileStorage;
     }
 
     public Task<IEnumerable<FileFolder>> GetStarredAsync(string userId, CancellationToken cancellationToken = default)
@@ -73,6 +76,10 @@ internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>
         var trashItems = _dbContext.FileFolders
             .Where(x => x.UserId == userId && x.IsInTrash)
             .ToList();
+        foreach (var file in trashItems.Where(x => x.Type == FileFolderType.File))
+        {
+            await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
+        }
         foreach (var folder in trashItems.Where(x => x.Type == FileFolderType.Folder))
         {
             var descendants = _dbContext.FileFolders.Where(x => x.UserId == userId && x.Path.StartsWith(folder.Path + "/"));
@@ -147,5 +154,19 @@ internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>
         var fileFolder = _dbContext.FileFolders.First(x => x.Id == notification.FileFolder.Id);
         fileFolder.LastAccessed = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task Handle(FilePermanentlyDeletedEvent notification, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _fileStorage.DeleteFileIfExistsAsync(notification.File.Id);
+        }
+        catch (Exception)
+        {
+            // Add it back if an exception happened while deleting the file from storage
+            _dbContext.FileFolders.Add(notification.File);
+            throw;
+        }
     }
 }

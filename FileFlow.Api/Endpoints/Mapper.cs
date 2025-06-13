@@ -18,11 +18,11 @@ public static class Mapper
         new()
         {
             Id = userStorage.Id,
-            Documents = userStorage.Documents,
-            Images = userStorage.Images,
-            MaxSpace = userStorage.MaxSpace,
-            Other = userStorage.Other,
-            Videos = userStorage.Videos,
-            UsedSpace = userStorage.UsedSpace
+            Documents = userStorage.Documents / (1000.0 * 1000.0),
+            Images = userStorage.Images / (1000.0 * 1000.0),
+            MaxSpace = userStorage.MaxSpace / (1000.0 * 1000.0),
+            Other = userStorage.Other / (1000.0 * 1000.0),
+            Videos = userStorage.Videos / (1000.0 * 1000.0),
+            UsedSpace = userStorage.UsedSpace / (1000.0 * 1000.0)
         };
 }

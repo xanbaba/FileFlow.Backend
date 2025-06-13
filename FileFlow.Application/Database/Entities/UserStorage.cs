@@ -4,12 +4,15 @@ public class UserStorage
 {
     public Guid Id { get; set; }
     public string UserId { get; set; } = null!;
-    public int MaxSpace { get; set; } // MB
-    public int UsedSpace { get; set; } // MB
+    public long MaxSpace { get; set; } // bytes
+    public long UsedSpace { get; set; } // bytes
 
     // Storage breakdown
-    public int Documents { get; set; } // MB
-    public int Images { get; set; } // MB
-    public int Videos { get; set; } // MB
-    public int Other { get; set; } // MB
+    public long Documents { get; set; } // bytes
+    public long Images { get; set; } // bytes
+    public long Videos { get; set; } // bytes
+    public long Other { get; set; } // bytes
+    
+    // Row Version
+    public byte[] RowVersion { get; set; } = null!;
 }

@@ -3,6 +3,7 @@ using FileFlow.Application.Database.Entities;
 using FileFlow.Application.MessageBus;
 using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
+using Microsoft.EntityFrameworkCore;
 
 namespace FileFlow.Application.Services;
 
@@ -24,65 +25,76 @@ public class UserStorageService : IUserStorageService, IEventHandler<FileUploade
         {
             Id = Guid.CreateVersion7(),
             UserId = userId,
-            MaxSpace = 10 * 1000, // 10 GB
+            MaxSpace = 10_000_000_000, // 10 GB
             UsedSpace = 0
         });
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // ignore
+        }
         return Task.FromResult(false);
 
     }
 
     public Task<UserStorage?> GetAsync(string userId, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_dbContext.UserStorages.FirstOrDefault(x => x.UserId == userId));
+        var userStorage = _dbContext.UserStorages.FirstOrDefault(x => x.UserId == userId);
+        return Task.FromResult(userStorage);
     }
 
     public Task Handle(FileUploadedEvent notification, CancellationToken cancellationToken)
     {
-        var file = notification.File;
-        var userStorage = _dbContext.UserStorages.First(x => x.UserId == file.UserId);
-        userStorage.UsedSpace += file.Size!.Value;
-        switch (file.FileCategory!)
-        {
-            case FileCategory.Document:
-                userStorage.Documents += file.Size.Value;
-                break;
-            case FileCategory.Image:
-                userStorage.Images += file.Size.Value;
-                break;
-            case FileCategory.Video:
-                userStorage.Videos += file.Size.Value;
-                break;
-            case FileCategory.Other:
-                userStorage.Other += file.Size.Value;
-                break;
-        }
-        
-        _dbContext.SaveChanges();
-        return Task.CompletedTask;
+        return UpdateUserStorage(notification.File, false, cancellationToken);
     }
 
     public Task Handle(FilePermanentlyDeletedEvent notification, CancellationToken cancellationToken)
     {
-        var userStorage = _dbContext.UserStorages.First(x => x.UserId == notification.File.UserId);
-        userStorage.UsedSpace -= notification.File.Size!.Value;
-        switch (notification.File.FileCategory!)
-        {
-            case FileCategory.Document:
-                userStorage.Documents -= notification.File.Size.Value;
-                break;
-            case FileCategory.Image:
-                userStorage.Images -= notification.File.Size.Value;
-                break;
-            case FileCategory.Video:
-                userStorage.Videos -= notification.File.Size.Value;
-                break;
-            case FileCategory.Other:
-                userStorage.Other -= notification.File.Size.Value;
-                break;
-        }
+        return UpdateUserStorage(notification.File, true, cancellationToken);
+    }
+
+    private const int MaxRetries = 3;
+    
+    private async Task UpdateUserStorage(FileFolder file, bool isDelete, CancellationToken cancellationToken = default)
+    {
         
-        _dbContext.SaveChanges();
-        return Task.CompletedTask;
+        long change = isDelete ? -file.Size!.Value : file.Size!.Value;
+        for (int i = 0; i < MaxRetries; i++)
+        {
+            try
+            {
+                var userStorage = _dbContext.UserStorages.First(x => x.UserId == file.UserId);
+                userStorage.UsedSpace += change;
+                
+                switch (file.FileCategory!)
+                {
+                    case FileCategory.Document:
+                        userStorage.Documents += change;
+                        break;
+                    case FileCategory.Image:
+                        userStorage.Images += change;
+                        break;
+                    case FileCategory.Video:
+                        userStorage.Videos += change;
+                        break;
+                    default:
+                        userStorage.Other += change;
+                        break;
+                }
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                var entityEntry = e.Entries.Single();
+                await entityEntry.ReloadAsync(cancellationToken);
+
+                if (i == MaxRetries - 1)
+                {
+                    throw;
+                }
+            }
+        }
     }
 }

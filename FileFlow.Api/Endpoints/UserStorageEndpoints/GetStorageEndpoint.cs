@@ -17,7 +17,7 @@ public class GetStorageEndpoint : IEndpoint
                     {
                         throw new Exception($"User storage not found for user {userId}");
                     }
-                    return Results.Ok(userStorage);
+                    return Results.Ok(userStorage.ToResponse());
                 })
             .WithName(Name)
             .RequireAuthorization()

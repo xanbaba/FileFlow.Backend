@@ -17,5 +17,7 @@ internal class UserStorageEntityConfiguration : IEntityTypeConfiguration<UserSto
         // Properties
         builder.Property(x => x.UserId)
             .HasMaxLength(255);
+        builder.Property(x => x.RowVersion)
+            .IsRowVersion();
     }
 }

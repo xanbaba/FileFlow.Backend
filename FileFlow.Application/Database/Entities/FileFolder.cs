@@ -59,7 +59,7 @@ public class FileFolder
     /// <summary>
     /// Gets or sets the size of the file in megabytes (MB). Null for folders.
     /// </summary>
-    public int? Size { get; set; } // MB
+    public long? Size { get; set; } // MB
 
     /// <summary>
     /// Gets or sets the type of the file (document, image, video, or other). Null for folders.

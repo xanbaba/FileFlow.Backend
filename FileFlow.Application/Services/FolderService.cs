@@ -10,7 +10,7 @@ namespace FileFlow.Application.Services;
 internal class FolderService : IFolderService
 {
     private readonly AppDbContext _dbContext;
-    private IEventBus _eventBus;
+    private readonly IEventBus _eventBus;
 
     public FolderService(AppDbContext dbContext, IEventBus eventBus)
     {
