@@ -21,4 +21,7 @@ public interface IFolderService
     public Task DeletePermanentlyAsync(string userId, Guid folderId, CancellationToken cancellationToken = default);
 
     public Task<FileFolder> RestoreFromTrashAsync(string userId, Guid folderId, CancellationToken cancellationToken = default);
+
+    internal Task DeleteFolderAndDescendantsAsync(string userId,
+        FileFolder folder, UserStorage userStorage, CancellationToken cancellationToken = default);
 }

@@ -19,4 +19,6 @@ public interface IUserStorageService
     /// <param name="cancellationToken"></param>
     /// <returns>UserStorage associated with the given user. Null if not found</returns>
     public Task<UserStorage?> GetAsync(string userId, CancellationToken cancellationToken = default);
+    
+    internal Task UpdateAsync(UserStorage userStorage, CancellationToken cancellationToken = default);
 }

@@ -7,6 +7,7 @@ using FileFlow.Application.Services.Exceptions;
 using FileFlow.Application.Utilities.FileStorageUtility;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.EntityFrameworkCore;
 using FileNotFoundException = FileFlow.Application.Services.Exceptions.FileNotFoundException;
 
 namespace FileFlow.Application.Services;
@@ -16,31 +17,25 @@ internal class FileService : IFileService
     private readonly AppDbContext _dbContext;
     private readonly IFileStorage _fileStorage;
     private readonly IEventBus _eventBus;
+    private readonly IUserStorageService _userStorageService;
 
-    public FileService(AppDbContext dbContext, IFileStorage fileStorage, IEventBus eventBus)
+    public FileService(AppDbContext dbContext, IFileStorage fileStorage, IEventBus eventBus, IUserStorageService userStorageService)
     {
         _dbContext = dbContext;
         _fileStorage = fileStorage;
         _eventBus = eventBus;
+        _userStorageService = userStorageService;
     }
 
-    public async Task<FileFolder> UploadAsync(string userId, string fileName, Guid? targetFolderId, Stream stream,
+    public async Task<FileFolder> UploadAsync(string userId, string fileName, long fileSize, Guid? targetFolderId,
+        Stream stream,
         CancellationToken cancellationToken = default)
     {
+        var fileId = Guid.CreateVersion7();
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            Guid? parentId = null;
-            FileFolder? parent = null;
-            if (targetFolderId is not null)
-            {
-                parent = _dbContext.FileFolders.FirstOrDefault(x =>
-                    x.UserId == userId && x.Id == targetFolderId);
-                if (parent is null)
-                    throw new FolderNotFoundException(userId, targetFolderId.Value);
-                parentId = parent.Id;
-            }
-
-            var path = Path.Join(parent?.Path ?? "/", fileName);
+            var path = GetUploadPath(userId, fileName, targetFolderId, out var parentId);
             if (_dbContext.FileFolders.Any(x => x.UserId == userId && x.Path == path))
             {
                 throw new FileAlreadyExistsException(userId, path);
@@ -53,14 +48,14 @@ internal class FileService : IFileService
 
             var file = new FileFolder
             {
-                Id = Guid.CreateVersion7(),
+                Id = fileId,
                 IsStarred = false,
                 IsInTrash = false,
                 UserId = userId,
                 Name = fileName,
                 Path = path,
-                Size = (int)(stream.Length / (1024.0 * 1024.0)),
                 Type = FileFolderType.File,
+                Size = fileSize,
                 ParentId = parentId,
                 FileCategory =
                     _dbContext.FileExtensionCategories
@@ -68,23 +63,65 @@ internal class FileService : IFileService
                     FileCategory.Other
             };
 
+            var userStorage = await _dbContext.UserStorages
+                .FromSqlRaw("SELECT TOP(1) * FROM UserStorages WITH (UPDLOCK, ROWLOCK) WHERE UserId = {0}", userId)
+                .FirstAsync(cancellationToken: cancellationToken);
+
+            if (userStorage.UsedSpace + fileSize > userStorage.MaxSpace)
+            {
+                throw new UserStorageOverflowException(file, userStorage);
+            }
+
             _dbContext.FileFolders.Add(file);
-            await _fileStorage.UploadFileAsync(file.Id, stream);
 
-            // Save changes
+            var actualFileSize = await _fileStorage.UploadFileAsync(file.Id, stream);
+
+            if (actualFileSize > fileSize)
+            {
+                // Delete if the client lied
+                await transaction.RollbackAsync(cancellationToken);
+                throw new UserStorageOverflowException(file, userStorage);
+            }
+
+            if (actualFileSize != fileSize)
+            {
+                file.Size = actualFileSize;
+            }
+
             await _dbContext.SaveChangesAsync(cancellationToken);
-            await _fileStorage.CommitAsync();
-
-            // Publish events
-            await _eventBus.PublishAsync(new FileUploadedEvent(file), cancellationToken);
+            await _userStorageService.UpdateAsync(userStorage, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            
+            // Publish event
             await _eventBus.PublishAsync(new FileFolderAccessed(file), cancellationToken);
+
+
             return file;
         }
         catch (Exception)
         {
-            await _fileStorage.RollbackTransaction();
+            await _fileStorage.DeleteFileIfExistsAsync(fileId);
+            await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    private string GetUploadPath(string userId, string fileName, Guid? targetFolderId, out Guid? parentId)
+    {
+        parentId = null;
+        FileFolder? parent = null;
+        if (targetFolderId is not null)
+        {
+            parent = _dbContext.FileFolders.FirstOrDefault(x =>
+                x.UserId == userId && x.Id == targetFolderId);
+            if (parent is null)
+                throw new FolderNotFoundException(userId, targetFolderId.Value);
+            parentId = parent.Id;
+        }
+
+        var path = Path.Join(parent?.Path ?? "/", fileName);
+        return path;
     }
 
     private static bool ValidateFileName(string fileName)
@@ -143,13 +180,35 @@ internal class FileService : IFileService
 
     public async Task DeletePermanentlyAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)
     {
-        var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
-        if (file is null) throw new FileNotFoundException(userId, fileId);
-        _dbContext.FileFolders.Remove(file);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var file = _dbContext.FileFolders.FirstOrDefault(x => x.UserId == userId && x.Id == fileId);
+            if (file is null) throw new FileNotFoundException(userId, fileId);
+            
+            var userStorage = await _dbContext.UserStorages
+                .FromSqlRaw("SELECT * FROM UserStorages WITH (UPDLOCK, ROWLOCK) WHERE UserId = {0}", userId)
+                .FirstAsync(cancellationToken: cancellationToken);
+            
+            await DeleteFileAsync(file, userStorage, cancellationToken);
 
-        // Publish the event
-        await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _userStorageService.UpdateAsync(userStorage, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task DeleteFileAsync(FileFolder file, UserStorage userStorage, CancellationToken cancellationToken = default)
+    {
+        _dbContext.FileFolders.Remove(file);
+
+        await _fileStorage.DeleteFileIfExistsAsync(file.Id);
     }
 
     public async Task RestoreFromTrashAsync(string userId, Guid fileId, CancellationToken cancellationToken = default)

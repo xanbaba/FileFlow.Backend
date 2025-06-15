@@ -13,34 +13,14 @@ internal class FileStorage : IFileStorage
         
         _containerClient.CreateIfNotExists();
     }
-    
-    private record FileUpload(Guid FileId, Stream Stream);
-    
-    private List<FileUpload> _uploads = [];
 
     private readonly BlobContainerClient _containerClient;
 
-    public async Task CommitAsync()
+    public async Task<long> UploadFileAsync(Guid fileId, Stream stream)
     {
-        foreach (var upload in _uploads)
-        {
-            BlobClient blobClient = _containerClient.GetBlobClient(upload.FileId.ToString());
-            await blobClient.UploadAsync(upload.Stream);
-        }
-
-        _uploads = [];
-    }
-
-    public Task RollbackTransaction()
-    {
-        _uploads = [];
-        return Task.CompletedTask;
-    }
-
-    public Task UploadFileAsync(Guid fileId, Stream stream)
-    {
-        _uploads.Add(new FileUpload(fileId, stream));
-        return Task.CompletedTask;
+        BlobClient blobClient = _containerClient.GetBlobClient(fileId.ToString());
+        await blobClient.UploadAsync(stream);
+        return (await blobClient.GetPropertiesAsync()).Value.ContentLength;
     }
 
     public async Task<Stream> DownloadFileAsync(Guid fileId)
@@ -52,5 +32,11 @@ internal class FileStorage : IFileStorage
         }
         
         return await blobClient.OpenReadAsync();
+    }
+
+    public async Task DeleteFileIfExistsAsync(Guid fileId)
+    {
+        BlobClient blobClient = _containerClient.GetBlobClient(fileId.ToString());
+        await blobClient.DeleteIfExistsAsync();
     }
 }

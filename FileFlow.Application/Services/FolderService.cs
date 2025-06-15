@@ -4,6 +4,7 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace FileFlow.Application.Services;
 
@@ -11,11 +12,15 @@ internal class FolderService : IFolderService
 {
     private readonly AppDbContext _dbContext;
     private readonly IEventBus _eventBus;
+    private readonly IFileService _fileService;
+    private readonly IUserStorageService _userStorageService;
 
-    public FolderService(AppDbContext dbContext, IEventBus eventBus)
+    public FolderService(AppDbContext dbContext, IEventBus eventBus, IFileService fileService, IUserStorageService userStorageService)
     {
         _dbContext = dbContext;
         _eventBus = eventBus;
+        _fileService = fileService;
+        _userStorageService = userStorageService;
     }
 
     public async Task<FileFolder> CreateAsync(string userId, string folderName, Guid? targetFolderId,
@@ -164,29 +169,55 @@ internal class FolderService : IFolderService
     public async Task DeletePermanentlyAsync(string userId, Guid folderId,
         CancellationToken cancellationToken = default)
     {
-        var folder = _dbContext.FileFolders.FirstOrDefault(x =>
-            x.UserId == userId &&
-            x.Id == folderId &&
-            x.Type == FileFolderType.Folder
-        );
-        if (folder is null) throw new FolderNotFoundException(userId, folderId);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var folder = _dbContext.FileFolders.FirstOrDefault(x =>
+                x.UserId == userId &&
+                x.Id == folderId &&
+                x.Type == FileFolderType.Folder
+            );
+            if (folder is null) throw new FolderNotFoundException(userId, folderId);
 
+            var userStorage = await _dbContext.UserStorages
+                .FromSqlRaw("SELECT * FROM UserStorages WITH (UPDLOCK, ROWLOCK) WHERE UserId = {0}", userId)
+                .FirstAsync(cancellationToken: cancellationToken);
+
+            
+            await DeleteFolderAndDescendantsAsync(userId, folder, userStorage, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _userStorageService.UpdateAsync(userStorage, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task DeleteFolderAndDescendantsAsync(string userId,
+        FileFolder folder, UserStorage userStorage, CancellationToken cancellationToken = default)
+    {
         // Find all descendants of this folder
         var descendants = _dbContext.FileFolders.Where(x =>
             x.UserId == userId && x.Path.StartsWith(folder.Path + "/")).ToList();
 
         // Remove all descendants first
-        _dbContext.FileFolders.RemoveRange(descendants);
         foreach (var file in descendants.Where(x => x.Type == FileFolderType.File))
         {
-            // Publish event for each deleted file
-            await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
+            await _fileService.DeleteFileAsync(file, userStorage, cancellationToken);
+        }
+
+        foreach (var descendantFolder in descendants.Where(x => x.Type == FileFolderType.Folder))
+        {
+            await DeleteFolderAndDescendantsAsync(userId, descendantFolder, userStorage, cancellationToken);
         }
 
         // Then remove the folder itself
         _dbContext.FileFolders.Remove(folder);
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<FileFolder> RestoreFromTrashAsync(string userId, Guid folderId,

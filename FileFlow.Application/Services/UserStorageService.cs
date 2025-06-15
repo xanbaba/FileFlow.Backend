@@ -1,13 +1,11 @@
 using FileFlow.Application.Database;
 using FileFlow.Application.Database.Entities;
-using FileFlow.Application.MessageBus;
-using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace FileFlow.Application.Services;
 
-public class UserStorageService : IUserStorageService, IEventHandler<FileUploadedEvent>, IEventHandler<FilePermanentlyDeletedEvent>
+public class UserStorageService : IUserStorageService
 {
     private readonly AppDbContext _dbContext;
 
@@ -46,55 +44,22 @@ public class UserStorageService : IUserStorageService, IEventHandler<FileUploade
         return Task.FromResult(userStorage);
     }
 
-    public Task Handle(FileUploadedEvent notification, CancellationToken cancellationToken)
+    public Task UpdateAsync(UserStorage userStorage, CancellationToken cancellationToken = default)
     {
-        return UpdateUserStorage(notification.File, false, cancellationToken);
-    }
-
-    public Task Handle(FilePermanentlyDeletedEvent notification, CancellationToken cancellationToken)
-    {
-        return UpdateUserStorage(notification.File, true, cancellationToken);
-    }
-
-    private const int MaxRetries = 3;
-    
-    private async Task UpdateUserStorage(FileFolder file, bool isDelete, CancellationToken cancellationToken = default)
-    {
+        var fileFolders = _dbContext.FileFolders.Where(x => x.UserId == userStorage.UserId);
+        var documents = fileFolders.Sum(x => x.FileCategory == FileCategory.Document ? x.Size : 0) ?? 0;
+        var images = fileFolders.Sum(x => x.FileCategory == FileCategory.Image ? x.Size : 0) ?? 0;
+        var videos = fileFolders.Sum(x => x.FileCategory == FileCategory.Video ? x.Size : 0) ?? 0;
+        var other = fileFolders.Sum(x => x.FileCategory == FileCategory.Other ? x.Size : 0) ?? 0;
         
-        long change = isDelete ? -file.Size!.Value : file.Size!.Value;
-        for (int i = 0; i < MaxRetries; i++)
-        {
-            try
-            {
-                var userStorage = _dbContext.UserStorages.First(x => x.UserId == file.UserId);
-                userStorage.UsedSpace += change;
-                
-                switch (file.FileCategory!)
-                {
-                    case FileCategory.Document:
-                        userStorage.Documents += change;
-                        break;
-                    case FileCategory.Image:
-                        userStorage.Images += change;
-                        break;
-                    case FileCategory.Video:
-                        userStorage.Videos += change;
-                        break;
-                    default:
-                        userStorage.Other += change;
-                        break;
-                }
-            }
-            catch (DbUpdateConcurrencyException e)
-            {
-                var entityEntry = e.Entries.Single();
-                await entityEntry.ReloadAsync(cancellationToken);
-
-                if (i == MaxRetries - 1)
-                {
-                    throw;
-                }
-            }
-        }
+        var usedSpace = documents + images + videos + other;
+        userStorage.UsedSpace = usedSpace;
+        
+        userStorage.Documents = documents;
+        userStorage.Images = images;
+        userStorage.Videos = videos;
+        userStorage.Other = other;
+        
+        return Task.CompletedTask;
     }
 }

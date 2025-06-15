@@ -4,21 +4,23 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.MessageBus.Events;
 using FileFlow.Application.Services.Abstractions;
 using FileFlow.Application.Services.Exceptions;
-using FileFlow.Application.Utilities.FileStorageUtility;
+using Microsoft.EntityFrameworkCore;
 
 namespace FileFlow.Application.Services;
 
-internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>, IEventHandler<FilePermanentlyDeletedEvent>
+internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>
 {
     private readonly AppDbContext _dbContext;
-    private readonly IEventBus _eventBus;
-    private readonly IFileStorage _fileStorage;
+    private readonly IFileService _fileService;
+    private readonly IFolderService _folderService;
+    private readonly IUserStorageService _userStorageService;
 
-    public ItemService(AppDbContext dbContext, IEventBus eventBus, IFileStorage fileStorage)
+    public ItemService(AppDbContext dbContext, IFileService fileService, IFolderService folderService, IUserStorageService userStorageService)
     {
         _dbContext = dbContext;
-        _eventBus = eventBus;
-        _fileStorage = fileStorage;
+        _fileService = fileService;
+        _folderService = folderService;
+        _userStorageService = userStorageService;
     }
 
     public Task<IEnumerable<FileFolder>> GetStarredAsync(string userId, CancellationToken cancellationToken = default)
@@ -33,7 +35,7 @@ internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>, IE
     public Task<IEnumerable<FileFolder>> GetRecentAsync(string userId, CancellationToken cancellationToken = default)
     {
         var items = _dbContext.FileFolders
-            .Where(x => x.LastAccessed.HasValue && x.LastAccessed.Value >= DateTime.UtcNow.AddDays(-1));
+            .Where(x => x.LastAccessed.HasValue && !x.IsInTrash && x.LastAccessed.Value >= DateTime.UtcNow.AddDays(-1));
         
         return Task.FromResult<IEnumerable<FileFolder>>(items);
     }
@@ -73,25 +75,42 @@ internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>, IE
 
     public async Task EmptyTrashAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var trashItems = _dbContext.FileFolders
-            .Where(x => x.UserId == userId && x.IsInTrash)
-            .ToList();
-        foreach (var file in trashItems.Where(x => x.Type == FileFolderType.File))
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
-        }
-        foreach (var folder in trashItems.Where(x => x.Type == FileFolderType.Folder))
-        {
-            var descendants = _dbContext.FileFolders.Where(x => x.UserId == userId && x.Path.StartsWith(folder.Path + "/"));
-            _dbContext.FileFolders.RemoveRange(descendants);
-            foreach (var file in descendants.Where(x => x.Type == FileFolderType.File))
-            {
-                await _eventBus.PublishAsync(new FilePermanentlyDeletedEvent(file), cancellationToken);
-            }
-        }
+            var trashItems = await _dbContext.FileFolders
+                .Where(x => x.UserId == userId && x.IsInTrash)
+                .ToListAsync(cancellationToken: cancellationToken);
+            
+            var userStorage = await _dbContext.UserStorages
+                .FromSqlRaw("SELECT * FROM UserStorages WITH (UPDLOCK, ROWLOCK) WHERE UserId = {0}", userId)
+                .FirstAsync(cancellationToken: cancellationToken);
 
-        _dbContext.FileFolders.RemoveRange(trashItems);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            foreach (var fileFolder in trashItems)
+            {
+                switch (fileFolder.Type)
+                {
+                    case FileFolderType.File:
+                        await _fileService.DeleteFileAsync(fileFolder, userStorage, cancellationToken);
+                        break;
+                    case FileFolderType.Folder:
+                        await _folderService.DeleteFolderAndDescendantsAsync(userId, fileFolder, userStorage, cancellationToken);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _userStorageService.UpdateAsync(userStorage, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task MoveToFolderAsync(string userId, Guid itemId, Guid? targetFolderId, CancellationToken cancellationToken = default)
@@ -154,19 +173,5 @@ internal class ItemService : IItemService, IEventHandler<FileFolderAccessed>, IE
         var fileFolder = _dbContext.FileFolders.First(x => x.Id == notification.FileFolder.Id);
         fileFolder.LastAccessed = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task Handle(FilePermanentlyDeletedEvent notification, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _fileStorage.DeleteFileIfExistsAsync(notification.File.Id);
-        }
-        catch (Exception)
-        {
-            // Add it back if an exception happened while deleting the file from storage
-            _dbContext.FileFolders.Add(notification.File);
-            throw;
-        }
     }
 }

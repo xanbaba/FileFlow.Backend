@@ -3,8 +3,6 @@ using FileFlow.Application.MessageBus;
 using FileFlow.Application.Options;
 using FileFlow.Application.Services;
 using FileFlow.Application.Services.Abstractions;
-using FileFlow.Application.Utilities.Auth0Utility;
-using FileFlow.Application.Utilities.EmailUtility;
 using FileFlow.Application.Utilities.FileStorageUtility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -23,9 +21,6 @@ public static class HostApplicationBuilderExtensions
         builder.Services.Configure<Auth0Options>(
             builder.Configuration.GetSection("Auth0"));
         
-        builder.Services.Configure<MailjetSettings>(
-            builder.Configuration.GetSection("MailjetSettings"));
-        
         builder.Services.AddHttpClient("Auth0Client", client =>
         {
             client.BaseAddress = new Uri($"https://{builder.Configuration["Auth0:Domain"]!}");
@@ -35,11 +30,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IFileService, FileService>();
         builder.Services.AddScoped<IFolderService, FolderService>();
         builder.Services.AddScoped<IItemService, ItemService>();
-        builder.Services.AddScoped<ISupportService, SupportService>();
         builder.Services.AddScoped<IFileStorage, FileStorage>();
-        builder.Services.AddScoped<ISupportEmail, SupportEmail>();
-        builder.Services.AddSingleton<IAuth0AccessTokenProvider, Auth0AccessTokenProvider>();
-        builder.Services.AddScoped<IUserUtility, UserUtility>();
         builder.Services.AddScoped<IUserStorageService, UserStorageService>();
         builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<AssemblyMarker>());
     }

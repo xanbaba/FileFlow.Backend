@@ -47,6 +47,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         catch (Exception e) when (e is InvalidOperationException)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            logger.LogError(e, "Invalid operation exception occurred.");
             await context.Response.WriteAsJsonAsync(new ErrorMessage(e.Message));
         }
         catch (Exception ex)
